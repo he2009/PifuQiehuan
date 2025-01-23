@@ -1,0 +1,14 @@
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji.atlas
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji.png
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/chuchang.atlas
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/beijing.atlas
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji2.atlas
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/beijing.skel
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/beijing.png
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/chuchang.png
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji_2.png
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji.skel
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/static_bg.png
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji2.png
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/daiji2.skel
+https://web.sanguosha.com/10/mobile/skin/dynamic/5124101/chuchang.skel

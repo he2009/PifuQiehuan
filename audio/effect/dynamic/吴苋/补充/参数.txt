@@ -1,0 +1,16 @@
+idle
+
+素材提供：黄小花
+
+鄙人偷闲，文件重命名诸位请便(滑稽)。
+吴苋: {
+                name: "wuxian",
+                x: [0, 0.4],
+                y: [0, 0.05],
+                scale: 0.2,
+                angle:  0,
+                speed: 1,
+                //action: "DaiJi",
+                background: "skin_Mobile_XuShi_QiHuaYaoCao_bg.png",
+                skinName: "wuxian"
+            },
