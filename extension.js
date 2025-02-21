@@ -1289,6 +1289,95 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 								        })
 								    }
 								}
+								
+								lib.skill._pfqh_check_changeGroup = {
+								    trigger: {
+								        global: 'gameStart'
+								    },
+								    silent: true,
+								    charlotte: true,
+								    forced: true,
+								    priority: 2025,
+								    filter(event, player) {
+								        return player.dynamic;
+								    },
+								    content: function() {
+								        let res = skinSwitch.dynamic.getSpecial(player, 'changeGroup');
+								        
+								        // 简化势力判断逻辑
+								        function getGroupType(characterName) {
+								            // 直接使用角色的势力属性
+								            let group = lib.character[characterName] ? lib.character[characterName][1] : null;
+								            // 如果找不到角色信息，返回null
+								            if (!group) return null;
+								            // 标准化势力名称
+								            if (typeof group === 'string') {
+								                if (['wei', 'shu', 'wu', 'qun'].includes(group)) return group;
+								            }
+								            return null;
+								        }
+								
+								        var playerGroupType = getGroupType(player.name);
+								        var currentPlayerGroupType = player.group;
+								        
+								        if (currentPlayerGroupType !== playerGroupType) {
+								            // 检查是否执行过换肤操作
+								            res.forEach(r => {
+								                const {avatar, special, effs, isPrimary} = r;
+								                let audio;
+								                
+								                let tryTransform = () => {
+								                    let transform = effs.transform;
+								                    if (!transform || !(transform in special)) return;
+								                    let trans = special[transform];
+								                    let dskins = decadeUI.dynamicSkin;
+								                    
+								                    // 播放转换的骨骼
+								                    let newName = trans.name;
+								                    if (newName) {
+								                        // 分割名字, 获取骨骼
+								                        let [key, skinName] = newName.split('/');
+								                        let dInfo = key && skinName && dskins[key] && dskins[key][skinName];
+								                        if (dInfo) {
+								                            skinSwitch.dynamic.transformDst(player, isPrimary, dInfo, {
+								                                huanfuEffect: effs.effect
+								                            });
+								                        }
+								                    } else {
+								                        skinSwitch.dynamic.transformDst(player, isPrimary, trans, {
+								                            huanfuEffect: effs.effect
+								                        });
+								                    }
+								                    audio = trans.audio;
+								                };
+								                
+								                let tryEffectPlay = () => {
+								                    // 检查是否有播放特效
+								                    let effectPlay = effs.play;
+								                    if (effectPlay) {
+								                        let eff = special[effectPlay];
+								                        if (eff) {
+								                            if (!eff.x) eff.x = [0, 0.5];
+								                            if (!eff.y) eff.y = [0, 0.5];
+								                            setTimeout(() => {
+								                                skinSwitch.chukuangWorkerApi.playEffect(eff);
+								                            }, (eff.delay || 0) * 1000);
+								                            if (!audio) audio = eff.audio;
+								                        }
+								                    }
+								                };
+								
+								                tryTransform();
+								                tryEffectPlay();
+								                
+								                if (!audio) audio = special.condition?.changeGroup?.audio;
+								                if (audio) {
+								                    game.playAudio('..', skinSwitch.dcdPath, 'assets/dynamic', audio);
+								                }
+								            });
+								        }
+								    }
+								};
 							};
 
                             // 覆盖reinit方法
