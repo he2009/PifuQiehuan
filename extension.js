@@ -868,7 +868,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 },
                                 forced: true,
                                 filter: function (event, player) {
-                                    return game.players.length > 1  /*&&player.phaseNumber===0*/ && player === event.player && !player.doubleAvatar && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.chuchang
+                                    return game.players.length > 1 && player === event.player && !player.doubleAvatar && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.chuchang
                                 },
                                 content: function () {
                                     skinSwitch.chukuangWorkerApi.chukuangAction(player, 'chuchang')
