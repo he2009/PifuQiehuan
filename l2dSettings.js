@@ -42,11 +42,7 @@ window.pfqhLive2dSettings = {
         dafeng_3: {
             role: 'dafeng_3/dafeng_3.model3.json',
             name: 'dafeng_3',  //
-            width: 1,  // 可以覆盖默认的宽度'
-            height: 1,
-            left: "0px",
-            bottom: "00px",
-
+            idleKeys: ['idle']
         },
     }
 }

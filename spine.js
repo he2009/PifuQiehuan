@@ -518,8 +518,8 @@ var spine;
 						return;
 					case MixPose.current:
 						var light = slot.color, dark = slot.darkColor, setupLight = slot.data.color, setupDark = slot.data.darkColor;
-						light.add((setupLight.r - light.r) * alpha, (setupLight.g - light.g) * alpha, (setupLight.b - light.b) * alpha, (setupLight.a - light.a) * alpha);
-						dark.add((setupDark.r - dark.r) * alpha, (setupDark.g - dark.g) * alpha, (setupDark.b - dark.b) * alpha, 0);
+						light.add((setupLight.r - light.r) * alpha * 0.7, (setupLight.g - light.g) * alpha * 0.7, (setupLight.b - light.b) * alpha * 0.7, (setupLight.a - light.a) * alpha);
+						dark.add((setupDark.r - dark.r) * alpha * 0.7, (setupDark.g - dark.g) * alpha * 0.7, (setupDark.b - dark.b) * alpha * 0.7, 0);
 				}
 				return;
 			}
@@ -563,8 +563,8 @@ var spine;
 					light.setFromColor(slot.data.color);
 					dark.setFromColor(slot.data.darkColor);
 				}
-				light.add((r - light.r) * alpha, (g - light.g) * alpha, (b - light.b) * alpha, (a - light.a) * alpha);
-				dark.add((r2 - dark.r) * alpha, (g2 - dark.g) * alpha, (b2 - dark.b) * alpha, 0);
+				light.add((r - light.r) * alpha * 0.7, (g - light.g) * alpha * 0.7, (b - light.b) * alpha * 0.7, (a - light.a) * alpha);
+				dark.add((r2 - dark.r) * alpha * 0.7, (g2 - dark.g) * alpha * 0.7, (b2 - dark.b) * alpha * 0.7, 0);
 			}
 		};
 		TwoColorTimeline.ENTRIES = 8;
@@ -10373,6 +10373,11 @@ var spine;
 						if (slotBlendMode != blendMode) {
 							blendMode = slotBlendMode;
 							batcher.setBlendMode(webgl.WebGLBlendModeConverter.getSourceGLBlendMode(blendMode, premultipliedAlpha), webgl.WebGLBlendModeConverter.getDestGLBlendMode(blendMode));
+						 if (premultipliedAlpha) {
+							batcher.setBlendMode(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						} else {
+							batcher.setBlendMode(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+						}
 						}
 						if (clipper.isClipping()) {
 							clipper.clipTriangles(renderable.vertices, renderable.numFloats, triangles, triangles.length, uvs, finalColor, darkColor, twoColorTint);

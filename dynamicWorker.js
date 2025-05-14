@@ -1,7 +1,7 @@
 'use strict';
 importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js',
-	'./spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', './spine-lib/spine_4_1.js',
-	'animation.js', 'settings.js', 'animations.js' );
+	'./spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', './spine-lib/spine_4_1.js', './spine-lib/spine_4_2.js',
+	'animation.js', 'settings.js', 'animations.js');
 
 console.log('new worker...')
 
@@ -49,7 +49,7 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 	let pLoad = function (actionParams) {
 		if (actionParams) {
 			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', function () {
+				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json' : 'skel', function () {
 					console.log('预加载出场骨骼成功')
 				}, function (data) {
 					console.log('播放骨骼失败, 参数: ', data)
@@ -71,7 +71,7 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 // 将这个函数改成只加载, 加载后再进行播放.
 function playSkin(am, data) {
 
-	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
+	let sprite = (typeof data.sprite == 'string') ? { name: data.sprite } : data.sprite;
 	let player;
 
 	if (!sprite.player) {
@@ -83,12 +83,13 @@ function playSkin(am, data) {
 	if (sprite.player && sprite.player.beijing != null) {
 		beijingDynamic = am.getAnimation(sprite.player.beijing.version || sprite.player.version)
 	}
+	let qianjingDynamic
+	if (sprite.player && sprite.player.qianjing != null) {
+		qianjingDynamic = am.getAnimation(sprite.player.qianjing.version || sprite.player.version)
+	}
 	update(am, data);
 
 	sprite.loop = true;
-
-
-
 	player = sprite.player;
 	sprite.alpha = player.alpha;
 
@@ -164,12 +165,18 @@ function playSkin(am, data) {
 				sprite.player.beijing = Object.assign(sprite.player.beijing, sprite.player.qhlx.beijing)
 			}
 		}
+		if (sprite.player.qianjing) {
+			// sprite.player.qianjing.scale = (sprite.player.qianjing.scale || 1) * sprite.player.largeFactor
+			if (sprite.player.qhlx && sprite.player.qhlx.qianjing) {
+				sprite.player.qianjing = Object.assign(sprite.player.qianjing, sprite.player.qhlx.qianjing)
+			}
+		}
 
 	}
 	// 将千幻的大小改成自适应
 	let loadAllSkels = () => {
 		let loadDaiJi = () => {
-			let skelType = sprite.player.json ? 'json': 'skel'
+			let skelType = sprite.player.json ? 'json' : 'skel'
 			try {
 				let setNewScale = () => {
 					if (sprite.qhlxBigAvatar && modifyQhlxPreview) {
@@ -210,46 +217,74 @@ function playSkin(am, data) {
 
 					}
 				}
+				// 停止并移除旧的骨骼动画节点
+				if (dynamic.nodes.length > 0) {
+					for (let node of dynamic.nodes) {
+						if (node.name !== sprite.name) {
+							dynamic.stopSpine(node);
+							dynamic.nodes = dynamic.nodes.filter(n => n !== node);
+						}
+					}
+				}
 				if (dynamic.hasSpine(sprite.name)) {
 					// 获取骨骼的具体大小
 					setNewScale()
-					postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
+					postMessage({ id: data.id, type: 'loadFinish', sprite: sprite })
 				} else {
 					try {
 						dynamic.loadSpine(sprite.name, skelType, () => {
 							setNewScale()
-							postMessage({id: data.id, type: 'loadFinish', sprite: sprite});
+							postMessage({ id: data.id, type: 'loadFinish', sprite: sprite });
 						}, (errMsg) => {
 							if (errMsg) {
 								console.error(errMsg)
-								postMessage({id: data.id, type: 'logMessage', msg: {errMsg: errMsg}})
+								postMessage({ id: data.id, type: 'logMessage', msg: { errMsg: errMsg } })
 							}
 							console.log('加载骨骼失败', sprite)
 						})
 					} catch (e) {
-						postMessage({id: data.id, type: 'logMessage', msg: {errMsg: e.toString()}})
+						postMessage({ id: data.id, type: 'logMessage', msg: { errMsg: e.toString() } })
 					}
 
 				}
 			} catch (e) {
-				postMessage({id: data.id, type: 'logMessage', msg: {errMsg: e.toString()}})
+				postMessage({ id: data.id, type: 'logMessage', msg: { errMsg: e.toString() } })
 			}
 		}
+
+		let loadPromises = [];
 
 		if (sprite.player && sprite.player.beijing != null) {
 			if (beijingDynamic.hasSpine(sprite.player.beijing.name)) {
-				loadDaiJi()
+				loadPromises.push(Promise.resolve());
 			} else {
-				beijingDynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json': 'skel', function () {
-					loadDaiJi()
-				})
+				loadPromises.push(new Promise((resolve, reject) => {
+					beijingDynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json' : 'skel', resolve, reject);
+				}));
 			}
 		} else {
-			loadDaiJi()
+			loadPromises.push(Promise.resolve());
 		}
 
+		if (sprite.player && sprite.player.qianjing != null) {
+			if (qianjingDynamic.hasSpine(sprite.player.qianjing.name)) {
+				loadPromises.push(Promise.resolve());
+			} else {
+				loadPromises.push(new Promise((resolve, reject) => {
+					qianjingDynamic.loadSpine(sprite.player.qianjing.name, sprite.player.qianjing.json ? 'json' : 'skel', resolve, reject);
+				}));
+			}
+		} else {
+			loadPromises.push(Promise.resolve());
+		}
+
+		Promise.all(loadPromises).then(() => {
+			loadDaiJi();
+		}).catch((error) => {
+			console.error('加载骨骼失败:', error);
+		});
 	}
-	loadAllSkels()
+	loadAllSkels();
 }
 
 
@@ -292,7 +327,7 @@ function getLabelIgnoreCase(node, label) {
 
 function create(data) {
 	if (animationManagers.length >= 4) return;
-	let am = new AnimationManager(data.pathPrefix,  data.canvas, data.id);
+	let am = new AnimationManager(data.pathPrefix, data.canvas, data.id);
 	if (data.dpr) dpr = data.dpr
 	modifyQhlxPreview = data.modifyQhlxPreview
 	animationManagers.push(am);
@@ -318,7 +353,12 @@ function startPlaySkin(data) {
 		beijingDynamic = am.getAnimation(sprite.player.beijing.version || sprite.player.version)
 	}
 
-	let run = function (beijingNode) {
+	let qianjingDynamic
+	if (sprite.player && sprite.player.qianjing != null) {
+		qianjingDynamic = am.getAnimation(sprite.player.qianjing.version || sprite.player.version)
+	}
+
+	let run1 = function (beijingNode) {
 		let t = dynamic.playSpine(sprite)
 		t.opacity = 0
 		t.beijingNode = beijingNode
@@ -342,16 +382,16 @@ function startPlaySkin(data) {
 		if (labels.includes(jinchangLabel)) {
 
 			// 清空原来的state状态, 添加出场
-			t.skeleton.state.setEmptyAnimation(0,0);
-			t.skeleton.state.setAnimation(0, jinchangLabel, false,0);
+			t.skeleton.state.setEmptyAnimation(0, 0);
+			t.skeleton.state.setAnimation(0, jinchangLabel, false, 0);
 			if (t.player.action && t.player.action !== jinchangLabel) {
-				t.skeleton.state.addAnimation(0, t.player.action,true,-0.01);
+				t.skeleton.state.addAnimation(0, t.player.action, true, -0.01);
 				t.action = t.player.action
 			} else {
 				for (let defaultDaiJi of dwDefaultDaiJiAction) {
 					let da = getLabelIgnoreCase(t, defaultDaiJi)
 					if (da) {
-						t.skeleton.state.addAnimation(0, da,true,-0.01);
+						t.skeleton.state.addAnimation(0, da, true, -0.01);
 						t.player.action = da
 						t.action = da
 					}
@@ -367,70 +407,205 @@ function startPlaySkin(data) {
 		t.opacity = 1;
 		// 将node保存一下, 表示是千幻大屏预览的node
 		t.qhlxBigAvatar = sprite.qhlxBigAvatar
-		postMessage({id: data.id, type: 'playSkinEnd'})
+		return t;
+	}
+
+	let run2 = function (qianjingNode, mainNode) {
+		// 如果已经有主节点，就不需要再创建了，直接关联前景节点
+		if (mainNode) {
+			mainNode.qianjingNode = qianjingNode;
+			return mainNode;
+		}
+		
+		let t = dynamic.playSpine(sprite)
+		t.opacity = 0
+		t.qianjingNode = qianjingNode
+
+		let skins = t.skeleton.data.skins
+		if (sprite.player.skin) {
+			for (let i = 0; i < skins.length; i++) {
+				if (skins[i].name === sprite.player.skin) {
+					// 设置skin
+					t.skeleton.setSkinByName(skins[i].name);
+					t.skeleton.setSlotsToSetupPose();
+				}
+			}
+		}
+
+		let labels = getAllActionLabels(t)
+		let jinchangLabel = 'ChuChang'  // 默认的进场标签
+		if (t.player.ss_jinchang) {
+			jinchangLabel = t.player.ss_jinchang
+		}
+		if (labels.includes(jinchangLabel)) {
+
+			// 清空原来的state状态, 添加出场
+			t.skeleton.state.setEmptyAnimation(0, 0);
+			t.skeleton.state.setAnimation(0, jinchangLabel, false, 0);
+			if (t.player.action && t.player.action !== jinchangLabel) {
+				t.skeleton.state.addAnimation(0, t.player.action, true, -0.01);
+				t.action = t.player.action
+			} else {
+				for (let defaultDaiJi of dwDefaultDaiJiAction) {
+					let da = getLabelIgnoreCase(t, defaultDaiJi)
+					if (da) {
+						t.skeleton.state.addAnimation(0, da, true, -0.01);
+						t.player.action = da
+						t.action = da
+					}
+				}
+			}
+		}
+		// 重置一下背景和待机的时间
+		if (qianjingNode) {
+			qianjingNode.skeleton.state.tracks[0].trackTime = 0
+			t.skeleton.state.tracks[0].trackTime = 0
+		}
+		sortNodes();
+		t.opacity = 1;
+		// 将node保存一下, 表示是千幻大屏预览的node
+		t.qhlxBigAvatar = sprite.qhlxBigAvatar
+		return t;
 	}
 
 	let runBeijing = () => {
-		sprite.player.beijing.loop = true
-		sprite.player.beijing.id = chukuangId++
+		sprite.player.beijing.loop = true;
+		sprite.player.beijing.id = chukuangId++;
 		if (sprite.player.beijing.alpha == null)
-			sprite.player.beijing.alpha = sprite.player.alpha
+			sprite.player.beijing.alpha = sprite.player.alpha;
 
 		// 如果是双将的话, 复制裁剪.
 		if (!sprite.player.beijing.clip && sprite.clip) {
-			sprite.player.beijing.clip = sprite.clip
+			sprite.player.beijing.clip = sprite.clip;
 		}
-		let node
+		let node;
 		try {
-			node = beijingDynamic.playSpine(sprite.player.beijing)
-			node.isbeijing = true
+			node = beijingDynamic.playSpine(sprite.player.beijing);
+			node.isbeijing = true;
 		} catch (e) {
-			console.error(e)
-			// debugger
-			console.log('dynamic=====', dynamic, data)
+			console.error(e);
+			console.log('dynamic=====', dynamic, data);
 		}
 
 		// 获取所有actions
-		let chuChangLabel = ''
-		let labels = getAllActionLabels(node)
+		let chuChangLabel = '';
+		let labels = getAllActionLabels(node);
 		for (let label of labels) {
-			let lowerLabel = label.toLowerCase()
+			let lowerLabel = label.toLowerCase();
 			if (lowerLabel === 'chuchang') {
-				chuChangLabel = label
-				break
+				chuChangLabel = label;
+				break;
 			}
 		}
 		// 查找背景是否也有出场标签
 		if (chuChangLabel) {
 			node.skeleton.state.setAnimation(0, chuChangLabel, false, 0);
 			// 获取所有actions
-
 			for (let label of labels) {
-				let lowerLabel = label.toLowerCase()
+				let lowerLabel = label.toLowerCase();
 				for (let daijiName of dwBeiJingDaiJiActions) {
 					if (daijiName.toLowerCase() === lowerLabel) {
-						node.skeleton.state.addAnimation(0, label,true,-0.01);
-						node.action = label
-						break
+						node.skeleton.state.addAnimation(0, label, true, -0.01);
+						node.action = label;
+						break;
 					}
 				}
 			}
 		}
 		// 检查当前节点是否存在位于背景层下的node, 提上来
-		sortNodes()
-		run(node)
+		sortNodes();
+		return node;
+	}
+
+	let runqianjing = () => {
+		sprite.player.qianjing.loop = true;
+		sprite.player.qianjing.id = chukuangId++;
+		if (sprite.player.qianjing.alpha == null)
+			sprite.player.qianjing.alpha = sprite.player.alpha;
+
+		// 如果是双将的话, 复制裁剪.
+		if (!sprite.player.qianjing.clip && sprite.clip) {
+			sprite.player.qianjing.clip = sprite.clip;
+		}
+		let node;
+		try {
+			node = qianjingDynamic.playSpine(sprite.player.qianjing);
+			node.isqianjing = true;
+		} catch (e) {
+			console.error(e);
+			console.log('dynamic=====', dynamic, data);
+		}
+
+		// 获取所有actions
+		let chuChangLabel = '';
+		let labels = getAllActionLabels(node);
+		for (let label of labels) {
+			let lowerLabel = label.toLowerCase();
+			if (lowerLabel === 'chuchang') {
+				chuChangLabel = label;
+				break;
+			}
+		}
+		// 查找背景是否也有出场标签
+		if (chuChangLabel) {
+			node.skeleton.state.setAnimation(0, chuChangLabel, false, 0);
+			// 获取所有actions
+			for (let label of labels) {
+				let lowerLabel = label.toLowerCase();
+				for (let daijiName of dwqianjingDaiJiActions) {
+					if (daijiName.toLowerCase() === lowerLabel) {
+						node.skeleton.state.addAnimation(0, label, true, -0.01);
+						node.action = label;
+						break;
+					}
+				}
+			}
+		}
+		return node;
 	}
 
 	let sortNodes = () => {
 		dynamic.nodes.sort((a, b) => {
-			return b.id - a.id
-		})
+			return b.id - a.id;
+		});
+		let qianjingNodes = dynamic.nodes.filter(node => node.isqianjing);
+		dynamic.nodes = dynamic.nodes.filter(node => !node.isqianjing).concat(qianjingNodes);
 	}
+
+	// 修复逻辑，按照正确的渲染顺序处理节点
+	let beijingNode = null;
+	let qianjingNode = null;
+	let mainNode = null;
+
+	// 第一步：先创建背景节点（如果有）
 	if (sprite.player.beijing) {
-		runBeijing()
-	} else {
-		run()
+		beijingNode = runBeijing();
 	}
+
+	// 第二步：创建主角色节点
+	mainNode = run1(beijingNode);
+	
+	// 第三步：最后创建前景节点（如果有）并关联到主节点
+	if (sprite.player.qianjing) {
+		qianjingNode = runqianjing();
+		// 确保前景节点在最上层
+		if (qianjingNode) {
+			// 从渲染列表中移除前景节点，然后添加到最后
+			dynamic.nodes = dynamic.nodes.filter(n => n !== qianjingNode);
+			dynamic.nodes.push(qianjingNode);
+			
+			// 确保前景节点与主节点正确关联
+			if (mainNode) {
+				mainNode.qianjingNode = qianjingNode;
+			}
+		}
+	}
+
+	// 重新排序所有节点确保正确的渲染顺序
+	sortNodes();
+	
+	// 发送消息表示播放完成
+	postMessage({ id: data.id, type: 'playSkinEnd' });
 }
 
 function stop(data) {
@@ -445,11 +620,14 @@ function stop(data) {
 		console.log('stop ....dynamic=========', dynamic, sprite)
 		if (!sprite) {
 			setTimeout(() => {
-				retryStop(times-1)
+				retryStop(times - 1)
 			}, 100)
 		} else {
 			if (sprite.beijingNode) {
 				dynamic.stopSpine(sprite.beijingNode)
+			}
+			if (sprite.qianjingNode) {
+				dynamic.stopSpine(sprite.qianjingNode)
 			}
 		}
 	}
@@ -609,7 +787,7 @@ function action(data) {
 		apnode.x = [0, 102]
 		apnode.y = [0, 102]
 
-		postMessage({id: data.id, type: 'chukuangFirst'})
+		postMessage({ id: data.id, type: 'chukuangFirst' })
 
 		setTimeout(() => {
 			// 播放完动画从播放的位置移动到待机的位置
@@ -651,7 +829,7 @@ function action(data) {
 				apnode.x = apnode.player.x;
 				apnode.y = apnode.player.y;
 				// window.postMessage(true)
-				postMessage({id: data.id, type: 'canvasRecover'})
+				postMessage({ id: data.id, type: 'canvasRecover' })
 				setTimeout(() => {
 					// 原来的节点恢复显示
 					apnode.opacity = 1
@@ -697,7 +875,7 @@ function action(data) {
 			setPos(actualPlayNode, data);
 			// 重新绑定开始渲染
 			actualPlayNode.opacity = 1
-			postMessage({id: data.id, type: 'chukuangSecond', delayTime: playNode ? 130 : 100})
+			postMessage({ id: data.id, type: 'chukuangSecond', delayTime: playNode ? 130 : 100 })
 		}, 200)
 	}
 
@@ -722,7 +900,7 @@ function action(data) {
 		if (!d) {
 			return
 		}
-		playChuKuangSpine(apnode, {duration: actionParams.showTime || d}, playedSprite)
+		playChuKuangSpine(apnode, { duration: actionParams.showTime || d }, playedSprite)
 	}
 
 	let errPlaySpine = function (data) {
@@ -744,7 +922,7 @@ function action(data) {
 				}
 				actionName = randomChoice(actionParams.action)
 				actionParams._oldAction = actionParams.action
-			}else if (actionParams._oldAction) {
+			} else if (actionParams._oldAction) {
 				// 防止第二次进来就不随机了
 				actionName = randomChoice(actionParams._oldAction)
 			}
@@ -757,15 +935,15 @@ function action(data) {
 				let defaultGongJiAction = getDefaultGongJiAction(dynamic, actionParams.name)
 				if (!defaultGongJiAction) return
 				// 防止假动皮出框
-				if (apnode.qhlxBigAvatar &&defaultGongJiAction.name !== 'GongJi') {
-					postMessage({id: data.id, type: 'canvasRecover'})
+				if (apnode.qhlxBigAvatar && defaultGongJiAction.name !== 'GongJi') {
+					postMessage({ id: data.id, type: 'canvasRecover' })
 					return
 				}
 				actionName = defaultGongJiAction.name
 				actionParams.action = actionName
 				// 有些静皮时间有点久, 需要重新指定一下
 				if (actionName === 'GongJi') duration = defaultGongJiAction.duration
-				else duration = actionParams.showTime || (defaultGongJiAction.duration > 2 ? 2: defaultGongJiAction.duration)
+				else duration = actionParams.showTime || (defaultGongJiAction.duration > 2 ? 2 : defaultGongJiAction.duration)
 			}
 			let animation = apnode.skeleton.data.findAnimation(actionName)
 			// 如果没有动画, 查找第二个角色的动画
@@ -774,14 +952,14 @@ function action(data) {
 					let hideNode = getHideDynamic(dynamic, data.needHide);
 					animation = hideNode.skeleton.data.findAnimation(actionName);
 					if (!animation) {
-						postMessage({id: data.id, type: 'canvasRecover'})
+						postMessage({ id: data.id, type: 'canvasRecover' })
 						return
 					} else {
 						apnode = hideNode;
 						data.deputy = !data.deputy;
 					}
 				} else {
-					postMessage({id: data.id, type: 'canvasRecover'})
+					postMessage({ id: data.id, type: 'canvasRecover' })
 					return
 				}
 			}
@@ -799,7 +977,7 @@ function action(data) {
 		} else {
 
 			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', function () {
+				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json' : 'skel', function () {
 					playChukuang(actionParams)
 				}, errPlaySpine)
 			} else {
@@ -816,7 +994,7 @@ function action(data) {
 			if (animation) {
 				apnode.skeleton.state.setAnimationWith(0, animation, false);
 				apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0);
-				postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': false})
+				postMessage({ id: data.id, type: 'teshuChuKuang', 'chukuang': false })
 			}
 		}
 	} else if (data.action === 'chuchang') {
@@ -834,7 +1012,7 @@ function action(data) {
 			playChuKuangSpine(apnode, animation)
 		} else {
 			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', function () {
+				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json' : 'skel', function () {
 					playChukuang(actionParams)
 				}, errPlaySpine)
 			} else {
@@ -860,7 +1038,7 @@ function position(data) {
 	completeParams(apnode)
 
 	if (data.mode === 'daiji') {
-		window.postMessage({id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle})
+		window.postMessage({ id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle })
 	} else if (data.mode === 'beijing') {
 		if (apnode.beijingNode) {
 			if (apnode.player.beijing.x == null) {
@@ -869,14 +1047,24 @@ function position(data) {
 			if (apnode.player.beijing.y == null) {
 				apnode.player.beijing.y = [0, 0]
 			}
-			window.postMessage({id: data.id, type: 'position', x: apnode.player.beijing.x, y: apnode.player.beijing.y, scale: apnode.player.beijing.scale, angle: apnode.player.beijing.angle})
+			window.postMessage({ id: data.id, type: 'position', x: apnode.player.beijing.x, y: apnode.player.beijing.y, scale: apnode.player.beijing.scale, angle: apnode.player.beijing.angle })
 		}
-	}else {
+	} else if (data.mode === 'qianjing') {
+		if (apnode.qianjingNode) {
+			if (apnode.player.qianjing.x == null) {
+				apnode.player.qianjing.x = [0, 0]
+			}
+			if (apnode.player.qianjing.y == null) {
+				apnode.player.qianjing.y = [0, 0]
+			}
+			window.postMessage({ id: data.id, type: 'position', x: apnode.player.qianjing.x, y: apnode.player.qianjing.y, scale: apnode.player.qianjing.scale, angle: apnode.player.qianjing.angle })
+		}
+	} else {
 		// 否则以配置中的pos作为出框的位置
 		let actionParams = apnode.player.gongjiAction
 		if (!actionParams)
 			return
-		window.postMessage({id: data.id, type: 'position', x: actionParams.x, y: actionParams.y, scale: actionParams.scale,})
+		window.postMessage({ id: data.id, type: 'position', x: actionParams.x, y: actionParams.y, scale: actionParams.scale, })
 	}
 }
 
@@ -909,7 +1097,10 @@ function debug(data) {
 		if (apnode.beijingNode) {
 			apnode.beijingNode.opacity = 1
 		}
-		window.postMessage({id: data.id, type: 'canvasRecover'})
+		if (apnode.qianjingNode) {
+			apnode.qianjingNode.opacity = 1
+		}
+		window.postMessage({ id: data.id, type: 'canvasRecover' })
 
 	} else if (data.mode === 'chukuang') {
 		// 如果已经存在出框的apnode的引用了, 那么直接播放即可.
@@ -919,6 +1110,9 @@ function debug(data) {
 			if (apnode.beijingNode) {
 				apnode.beijingNode.opacity = 0
 			}
+			if (apnode.qianjingNode) {
+				apnode.qianjingNode.opacity = 0
+			}
 			setTimeout(() => {
 				apnode.chukuangNode.opacity = 1
 				// 获取出框node的action
@@ -927,7 +1121,7 @@ function debug(data) {
 				apnode.chukuangNode.skeleton.setToSetupPose();
 				apnode.chukuangNode.skeleton.state.setAnimation(0, action, 1)
 			}, 350)
-			window.postMessage({id: data.id, type: 'debugChuKuang'})
+			window.postMessage({ id: data.id, type: 'debugChuKuang' })
 			// window.postMessage(true)
 			return
 		}
@@ -941,6 +1135,9 @@ function debug(data) {
 				apnode.opacity = 0
 				if (apnode.beijingNode) {
 					apnode.beijingNode.opacity = 0
+				}
+				if (apnode.qianjingNode) {
+					apnode.qianjingNode.opacity = 0
 				}
 
 				let actualPlayNode = playNode ? playNode : apnode
@@ -958,13 +1155,13 @@ function debug(data) {
 					}
 				}, 200)
 				// window.postMessage(true);
-				window.postMessage({id: data.id, type: 'debugChuKuang'})
+				window.postMessage({ id: data.id, type: 'debugChuKuang' })
 			}
 
 			let errPlaySpine = function (data) {
 				// window.postMessage(false)
-				window.postMessage({id: data.id, type: 'canvasRecover'})
-				window.postMessage({id: data.id, type: 'debugNoChuKuang'})
+				window.postMessage({ id: data.id, type: 'canvasRecover' })
+				window.postMessage({ id: data.id, type: 'debugNoChuKuang' })
 				console.log('播放骨骼失败, 参数: ', data)
 			}
 
@@ -979,7 +1176,7 @@ function debug(data) {
 					}
 					actionName = randomChoice(actionParams.action)
 					actionParams._oldAction = actionParams.action
-				}else if (actionParams._oldAction) {
+				} else if (actionParams._oldAction) {
 					// 防止第二次进来就不随机了
 					actionName = randomChoice(actionParams._oldAction)
 				}
@@ -993,7 +1190,7 @@ function debug(data) {
 				let animation = apnode.skeleton.data.findAnimation(actionName)
 				// 如果没有动画, 查找第二个角色的动画
 				if (!animation) {
-					window.postMessage({id: data.id, type: 'debugNoChuKuang'})
+					window.postMessage({ id: data.id, type: 'debugNoChuKuang' })
 					return
 				}
 				playSpine(apnode, animation)
@@ -1003,7 +1200,7 @@ function debug(data) {
 					if (Array.isArray(actionParams.action) && actionParams.action.length > 0) {
 						actionParams._oldAction = actionParams.action
 						actionParams.action = randomChoice(actionParams.action)
-					}else if (actionParams._oldAction) {
+					} else if (actionParams._oldAction) {
 						// 防止第二次进来就不随机了
 						actionParams.action = randomChoice(actionParams._oldAction)
 					}
@@ -1018,7 +1215,7 @@ function debug(data) {
 				}
 
 				if (!dynamic.hasSpine(actionParams.name)) {
-					dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', playChukuang, errPlaySpine)
+					dynamic.loadSpine(actionParams.name, actionParams.json ? 'json' : 'skel', playChukuang, errPlaySpine)
 				} else {
 					playChukuang()
 				}
@@ -1034,7 +1231,18 @@ function debug(data) {
 		if (apnode.beijingNode) {
 			apnode.beijingNode.opacity = 1
 		}
-		window.postMessage({id: data.id, type: 'canvasRecover'})
+		window.postMessage({ id: data.id, type: 'canvasRecover' })
+	} else if (data.mode === 'qianjing') {
+		if (apnode.chukuangNode) {
+			// 停止当前播放的动画
+			apnode.chukuangNode.opacity = 0
+
+		}
+		apnode.opacity = 0
+		if (apnode.qianjingNode) {
+			apnode.qianjingNode.opacity = 1
+		}
+		window.postMessage({ id: data.id, type: 'canvasRecover' })
 	}
 }
 
@@ -1053,11 +1261,11 @@ function adjust(data) {
 			apnode.y = data.y
 			apnode.player.x = data.x
 			apnode.player.y = data.y
-		} else if (data.xyPos !== undefined){
+		} else if (data.xyPos !== undefined) {
 			if (data.xyPos.x !== undefined) {
 				apnode.x[0] = data.xyPos.x
 				apnode.player.x[0] = data.xyPos.x
-			} else if (data.xyPos.y !== undefined){
+			} else if (data.xyPos.y !== undefined) {
 				apnode.y[0] = data.xyPos.y
 				apnode.player.y[0] = data.xyPos.y
 			}
@@ -1085,7 +1293,7 @@ function adjust(data) {
 			// 修改参数
 			actionParams.x = data.x
 			actionParams.y = data.y
-		} else if (data.xyPos){
+		} else if (data.xyPos) {
 			if (data.xyPos.x !== undefined) {
 				if (apnode.chukuangNode) {
 					apnode.chukuangNode.x[0] = data.xyPos.x
@@ -1093,7 +1301,7 @@ function adjust(data) {
 					apnode.x[0] = data.xyPos.x
 				}
 				actionParams.x[0] = data.xyPos.x
-			} else if (data.xyPos.y !== undefined){
+			} else if (data.xyPos.y !== undefined) {
 				if (apnode.chukuangNode) {
 					apnode.chukuangNode.y[0] = data.xyPos.y
 				} else {
@@ -1127,10 +1335,10 @@ function adjust(data) {
 		if (data.x != null && data.y != null) {
 			apnode.beijingNode.x = data.x
 			apnode.beijingNode.y = data.y
-		} else if (data.xyPos != null){
+		} else if (data.xyPos != null) {
 			if (data.xyPos.x != null) {
 				apnode.beijingNode.x[0] = data.xyPos.x
-			} else if (data.xyPos.y != null){
+			} else if (data.xyPos.y != null) {
 				apnode.beijingNode.y[0] = data.xyPos.y
 			}
 		} else if (data.scale != null) {
@@ -1139,6 +1347,25 @@ function adjust(data) {
 			apnode.beijingNode.angle = data.angle
 		}
 		console.log('当前待机位置参数x', apnode.beijingNode.x, '当前待机位置参数y', apnode.beijingNode.y, 'scale', apnode.beijingNode.scale, 'angle', apnode.beijingNode.angle)
+	} else if (data.mode === 'qianjing') {
+		if (apnode.qianjingNode == null) {
+			return
+		}
+		if (data.x != null && data.y != null) {
+			apnode.qianjingNode.x = data.x
+			apnode.qianjingNode.y = data.y
+		} else if (data.xyPos != null) {
+			if (data.xyPos.x != null) {
+				apnode.qianjingNode.x[0] = data.xyPos.x
+			} else if (data.xyPos.y != null) {
+				apnode.qianjingNode.y[0] = data.xyPos.y
+			}
+		} else if (data.scale != null) {
+			apnode.qianjingNode.scale = data.scale
+		} else if (data.angle != null) {
+			apnode.qianjingNode.angle = data.angle
+		}
+		console.log('当前待机位置参数x', apnode.qianjingNode.x, '当前待机位置参数y', apnode.qianjingNode.y, 'scale', apnode.qianjingNode.scale, 'angle', apnode.qianjingNode.angle)
 	}
 }
 
@@ -1219,6 +1446,23 @@ function resize(data) {
 			apnode.beijingNode.angle = data.angle
 			apnode.player.beijing.angle = data.angle
 		}
+	} else if (data.mode === 'qianjing') {
+		if (apnode.qianjingNode == null) {
+			return
+		}
+		if (data.x != null && data.y != null) {
+			apnode.qianjingNode.x = data.x
+			apnode.qianjingNode.y = data.y
+			apnode.player.qianjing.x = data.x
+			apnode.player.qianjing.y = data.y
+
+		} else if (data.scale != null) {
+			apnode.qianjingNode.scale = data.scale
+			apnode.player.qianjing.scale = data.scale
+		} else if (data.angle != null) {
+			apnode.qianjingNode.angle = data.angle
+			apnode.player.qianjing.angle = data.angle
+		}
 	}
 }
 
@@ -1254,7 +1498,7 @@ function getNodeInfo(data) {
 		slots.daiji[slotName] = hideSlots.has(slotName)
 	})
 
-	let gongjiInfo = null, beijingInfo = null
+	let gongjiInfo = null, beijingInfo = null, qianjingInfo = null
 	if (apnode.player.gongjiAction) {
 		let actionParams = apnode.player.gongjiAction
 		gongjiInfo = {
@@ -1266,8 +1510,14 @@ function getNodeInfo(data) {
 			x: apnode.player.beijing.x, y: apnode.player.beijing.y, scale: apnode.player.beijing.scale, angle: apnode.player.beijing.angle
 		}
 	}
+	if (apnode.qianjingNode) {
+		qianjingInfo = {
+			x: apnode.player.qianjing.x, y: apnode.player.qianjing.y, scale: apnode.player.qianjing.scale, angle: apnode.player.qianjing.angle
+		}
+	}
 	retData.gongji = gongjiInfo
 	retData.beijing = beijingInfo
+	retData.qianjing = qianjingInfo
 	retData.slots = slots
 
 	window.postMessage(retData)
@@ -1318,7 +1568,7 @@ function changeAction(data) {
 
 
 function loadResources(data) {
-	const {players} = data
+	const { players } = data
 	let preLoad = (am, player) => {
 		// 获取正确的ani
 		let dynamic = am.getAnimation(player.version)
@@ -1326,30 +1576,53 @@ function loadResources(data) {
 		if (player.beijing != null) {
 			beijingDynamic = am.getAnimation(player.beijing.version || player.version)
 		}
+		let qianjingDynamic
+		if (player.qianjing != null) {
+			qianjingDynamic = am.getAnimation(player.qianjing.version || player.version)
+		}
 		// 将千幻的大小改成自适应
 		let loadAllSkels = () => {
 			let loadDaiJi = () => {
-				let skelType = player.json ? 'json': 'skel'
+				let skelType = player.json ? 'json' : 'skel'
 				if (!dynamic.hasSpine(player.name)) {
-					dynamic.loadSpine(player.name, skelType, () => {}, (errMsg) => {
+					dynamic.loadSpine(player.name, skelType, () => { }, (errMsg) => {
 						if (errMsg) {
 							console.error(errMsg)
 						}
 					})
 				}
 			}
+			let loadPromises = [];
+
 			if (player && player.beijing != null) {
 				if (beijingDynamic.hasSpine(player.beijing.name)) {
-					loadDaiJi()
+					loadPromises.push(Promise.resolve());
 				} else {
-					beijingDynamic.loadSpine(player.beijing.name, player.beijing.json ? 'json': 'skel', function () {
-						loadDaiJi()
-					})
+					loadPromises.push(new Promise((resolve, reject) => {
+						beijingDynamic.loadSpine(player.beijing.name, player.beijing.json ? 'json' : 'skel', resolve, reject);
+					}));
 				}
 			} else {
-				loadDaiJi()
+				loadPromises.push(Promise.resolve());
 			}
 
+			if (player && player.qianjing != null) {
+				if (qianjingDynamic.hasSpine(player.qianjing.name)) {
+					loadPromises.push(Promise.resolve());
+				} else {
+					loadPromises.push(new Promise((resolve, reject) => {
+						qianjingDynamic.loadSpine(player.qianjing.name, player.qianjing.json ? 'json' : 'skel', resolve, reject);
+					}));
+				}
+			} else {
+				loadPromises.push(Promise.resolve());
+			}
+
+			Promise.all(loadPromises).then(() => {
+				loadDaiJi();
+			}).catch((error) => {
+				console.error('加载骨骼失败:', error);
+			});
 		}
 		loadAllSkels()
 	}
@@ -1532,7 +1805,7 @@ function getDefaultParam(dynamic, t) {
 
 	// 手动设置x和y值.
 	let xx = -(centerX - width / 2) / width
-	let yy = 1-(centerY + height / 2) / height
+	let yy = 1 - (centerY + height / 2) / height
 	// t.scale = scale
 	// t.x = [0, xx]
 	// t.y = [0, yy]
@@ -1582,9 +1855,9 @@ function completeParams(node) {
 	// 如果填写了出场参数, 基本确认是十周年的真动皮
 	if (chuchang) {
 		if (chuchangType === 'object') {
-			if (!chuchang.name) {chuchang.name = node.name}
-			if (!chuchang.action) {chuchang.action = 'play'}
-			if (!chuchang.scale) {chuchang.scale = player.scale}
+			if (!chuchang.name) { chuchang.name = node.name }
+			if (!chuchang.action) { chuchang.action = 'play' }
+			if (!chuchang.scale) { chuchang.scale = player.scale }
 			player.chuchangAction = chuchang
 		}
 	}
@@ -1650,7 +1923,7 @@ function completeParams(node) {
 				gongjiAction.y = [0, 0.5]
 				gongjiAction.posAuto = true
 			}
-			if (!gongjiAction.scale) {gongjiAction.scale = player.scale}
+			if (!gongjiAction.scale) { gongjiAction.scale = player.scale }
 		} else {
 			// 默认从当前皮肤的GongJi标签来播放动作
 			gongjiAction = {
@@ -1672,16 +1945,16 @@ function completeParams(node) {
 				action: player.teshu,
 			}
 		}
-			// 特殊动作, 原地播放待机动画没啥意义, 就不提供
-			// else if (teshuType === true) {
-			// 	gongjiAction = {
-			// 		name: node.name,  // 和原来的皮肤一样
-			// 		x: [0, 0.5],
-			// 		y: [0, 0.5],
-			// 		scale: player.scale,  //
-			// 		action: player.gongji,
-			// 		showTime: 2  // 静态皮肤可以指定出框的时间, 因为有些静态皮肤的待机动作时间太长了, 需要提前结束
-			// 	}
+		// 特殊动作, 原地播放待机动画没啥意义, 就不提供
+		// else if (teshuType === true) {
+		// 	gongjiAction = {
+		// 		name: node.name,  // 和原来的皮肤一样
+		// 		x: [0, 0.5],
+		// 		y: [0, 0.5],
+		// 		scale: player.scale,  //
+		// 		action: player.gongji,
+		// 		showTime: 2  // 静态皮肤可以指定出框的时间, 因为有些静态皮肤的待机动作时间太长了, 需要提前结束
+		// 	}
 		// }
 		else if (teshuType === 'object') {
 			teshuAction = teshu
@@ -1692,15 +1965,15 @@ function completeParams(node) {
 			}
 			// 特殊动画还是最好不要出框, 不然触发频率太高了...
 			if (teshuAction.name !== node.name) {
-				if (!teshuAction.x) {teshuAction.x = [0, 0.5]}
-				if (!teshuAction.y) {teshuAction.y = [0, 0.5]}
+				if (!teshuAction.x) { teshuAction.x = [0, 0.5] }
+				if (!teshuAction.y) { teshuAction.y = [0, 0.5] }
 
 			} else {
-				if (!teshuAction.x) {teshuAction.x = player.x}
-				if (!teshuAction.y) {teshuAction.y = player.y}
+				if (!teshuAction.x) { teshuAction.x = player.x }
+				if (!teshuAction.y) { teshuAction.y = player.y }
 			}
-			if (!teshuAction.scale) {teshuAction.scale = player.scale}
-			if (!teshuAction.showTime) {teshuAction.showTime = 2}
+			if (!teshuAction.scale) { teshuAction.scale = player.scale }
+			if (!teshuAction.showTime) { teshuAction.showTime = 2 }
 		} else {
 			// 默认从当前皮肤的GongJi标签来播放动作
 			teshuAction = {
@@ -1840,15 +2113,19 @@ function playDaiJi(apnode) {
 		let animation = apnode.skeleton.data.findAnimation("ChuChang");
 		if (animation) {
 			apnode.skeleton.state.setAnimationWith(0, animation, false, -0.01);
-			apnode.skeleton.state.addAnimation(0, apnode.player.action,true,0);
+			apnode.skeleton.state.addAnimation(0, apnode.player.action, true, 0);
 		} else {
-			apnode.skeleton.state.setAnimation(0, apnode.player.action,true,0);
+			apnode.skeleton.state.setAnimation(0, apnode.player.action, true, 0);
 		}
 	} else {
 		apnode.skeleton.state.setAnimation(0, apnode.skeleton.defaultAction, true, 0);
 	}
 	if (apnode.beijingNode) {
 		apnode.beijingNode.skeleton.state.tracks[0].trackTime = 0
+		apnode.skeleton.state.tracks[0].trackTime = 0
+	}
+	if (apnode.qianjingNode) {
+		apnode.qianjingNode.skeleton.state.tracks[0].trackTime = 0
 		apnode.skeleton.state.tracks[0].trackTime = 0
 	}
 }

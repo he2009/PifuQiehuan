@@ -129,6 +129,9 @@ window.pfqhUtils = {
                 else if (v.startsWith('4.1')) {
                     version =  '4.1'
                 }
+                else if (v.startsWith('4.2')) {
+                    version =  '4.2'
+                }
                 else {
                     version = v
                 }
@@ -288,6 +291,7 @@ window.pfqhUtils = {
                         let daijiTags = ['daiji2', 'xingxiang', 'daiji']
                         let chuchangTags = ['chuchang']
                         let beijingTags = ['beijing']
+                        let qianjingTags = ['qianjing']
                         let gongjiTags = ['chuchang2', 'jineng02']
                         let teshuTags = ['jineng02', 'chuchang2']
                         let zhishixianTags = ['shouji2']
@@ -306,7 +310,7 @@ window.pfqhUtils = {
                         stringBuffer.push(`'use strict';\ndecadeModule.import(function(lib, game, ui, get, ai, _status){\n`)
                         stringBuffer.push('\tdecadeUI.dynamicSkin = {\n')
 
-                        let daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, chuchangParams, zhishixianBaoParams
+                        let daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, qianjingParams, chuchangParams, zhishixianBaoParams
 
                         let checkoutTagIn = (info, tags) => {
                             for (let t of tags) {
@@ -367,6 +371,11 @@ window.pfqhUtils = {
                                     beijingParams.x = defaultBeiJing.x
                                     beijingParams.y = defaultBeiJing.y
                                 }
+                                qianjingParams = getParams(skelInfo, qianjingTags)
+                                if (qianjingParams) {
+                                    qianjingParams.x = defaultqianjing.x
+                                    qianjingParams.y = defaultqianjing.y
+                                }
                                 daijiParams = getParams(skelInfo, daijiTags)
                                 if (daijiParams) {
                                     daijiParams.x = defaultXY.x
@@ -397,13 +406,13 @@ window.pfqhUtils = {
                                     daijiParams.shizhounian = true
                                 }
 
-                                for (let p of [daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, chuchangParams, zhishixianBaoParams]) {
+                                for (let p of [daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, qianjingParams, chuchangParams, zhishixianBaoParams]) {
                                     if (p && (p.version !== '3.6')) {
                                         hasOtherVersion = true
                                     }
                                 }
                                 if (!hasOtherVersion) {
-                                    for (let p of [daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, chuchangParams, zhishixianBaoParams]) {
+                                    for (let p of [daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, qianjingParams, chuchangParams, zhishixianBaoParams]) {
                                         if (p) {
                                             delete p.version
                                         }
@@ -422,6 +431,13 @@ window.pfqhUtils = {
                                     stringBuffer.push(`\t\t\t\tbeijing: {\n`)
                                     for (let k in beijingParams) {
                                         stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(beijingParams[k])},\n`)
+                                    }
+                                    stringBuffer.push(`\t\t\t\t},\n`)
+                                }
+                                                                if (qianjingParams) {
+                                    stringBuffer.push(`\t\t\t\tqianjing: {\n`)
+                                    for (let k in qianjingParams) {
+                                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(qianjingParams[k])},\n`)
                                     }
                                     stringBuffer.push(`\t\t\t\t},\n`)
                                 }
@@ -599,9 +615,9 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
                         }
                     } else if (k === 'dynamicBackground') {
                         if (typeof skin[k] === 'string') {
-                            daijiParams['beijing'] = {name: skin[k]}
+                            daijiParams['beijing', 'qianjing'] = {name: skin[k]}
                         } else {
-                            daijiParams['beijing'] = skin[k]
+                            daijiParams['beijing', 'qianjing'] = skin[k]
                         }
                     } else {
                         if (skin[k] === undefined || k === 'gongji' || k === 'chuchang' || k === 'teshu') {
@@ -636,6 +652,13 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
                     stringBuffer.push(`\t\t\t\tbeijing: {\n`)
                     for (let k in daijiParams.beijing) {
                         stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(daijiParams.beijing[k])},\n`)
+                    }
+                    stringBuffer.push(`\t\t\t\t},\n`)
+                }
+                if ('qianjing' in daijiParams) {
+                    stringBuffer.push(`\t\t\t\tqianjing: {\n`)
+                    for (let k in daijiParams.qianjing) {
+                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(daijiParams.qianjing[k])},\n`)
                     }
                     stringBuffer.push(`\t\t\t\t},\n`)
                 }
