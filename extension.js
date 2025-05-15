@@ -9758,4 +9758,4 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  
  /**1.21版本更新
  1.添加前景、光污染、技能变身换肤
- 2.删除藏珍阁*/
+ 2.删除藏珍阁和live2d*/
