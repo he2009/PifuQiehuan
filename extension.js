@@ -9466,7 +9466,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             //     init: true,
             //     intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
             // },
-            'l2dEnable': {
+            /*'l2dEnable': {
                 name: "是否开启l2d",
                 init:  false,
                 intro: '添加l2d模型'
@@ -9498,7 +9498,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.l2dLoader.changeModel(base)
                     }
                 },
-            },
+            },*/
             'previewSkinsDynamic': {
                 name: "预览角色使用动皮",
                 "init": true,
