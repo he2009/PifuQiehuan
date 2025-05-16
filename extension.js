@@ -234,7 +234,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 if (this.isAlive() && this.dynamic && !this.GongJi) {
                                                     if (!this.doubleAvatar) {
                                                         let teshu = this.dynamic.primary.player.teshu
-                                                        if (typeof teshu === 'object') {
+                                                        if (teshu !== null && typeof teshu === 'object') {
                                                             if (teshu.whitelist) {
                                                                 if (teshu.whitelist.includes(name)) {
                                                                     skinSwitch.chukuangWorkerApi.chukuangAction(this, 'TeShu');
@@ -654,7 +654,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 if (this.isAlive() && this.dynamic && !this.GongJi) {
                                                     if (!this.doubleAvatar) {
                                                         let teshu = this.dynamic.primary.player.teshu
-                                                        if (typeof teshu === 'object') {
+                                                        if (teshu !== null && typeof teshu === 'object') {
                                                             if (teshu.whitelist) {
                                                                 if (teshu.whitelist.includes(name)) {
                                                                     skinSwitch.chukuangWorkerApi.chukuangAction(this, 'TeShu');
@@ -1366,7 +1366,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     // 过滤技能白名单, 只在单将模式下生效
                                     if (!player.doubleAvatar) {
                                         let teshu = player.dynamic.primary && player.dynamic.primary.player.teshu
-                                        if (typeof teshu === 'object') {
+                                        if (teshu !== null && typeof teshu === 'object') {
                                             if (teshu.whitelist) {
                                                 if (teshu.whitelist.includes(triggerSkill)) {
                                                     skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu');
@@ -1442,14 +1442,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             //     },
                             //     forced: true,
                             //     filter: function (event, player) {
-                            //         return !player.doubleAvatar && player.dynamic && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")  && !player.classList.contains('unseen') && !player.classList.contains('unseen2');
+                            //         return !player.doubleAvatar && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.chuchang
                             //     },
                             //     content: function () {
-                            //         var isYh = player.getElementsByClassName("skinYh");
-                            //         if (Object.keys(isYh).length <= 0) {
-                            //             var yh = skinSwitch.createYH(player.group);
-                            //             player.appendChild(yh);
-                            //         }
+                            //         skinSwitch.chukuangWorkerApi.chukuangAction(player, 'chuchang')
                             //     }
                             // };
 
@@ -2549,29 +2545,42 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 skinSwitchCheckYH: function (player, forces) {
                     if (lib.config['extension_十周年UI_newDecadeStyle'] == "on") return;
                     if (!player || get.itemtype(player) != 'player') return;
+                    
+                    // 确保获取正确的势力，优先使用传入的forces参数，其次是player.group
                     let group = forces || player.group || 'weizhi';
                     let isYh = false;
 
+                    // 检查动皮是否存在并且需要显示圆顶
                     if (player.dynamic) {
                         if (player.dynamic.primary && !player.isUnseen(0)) isYh = true;
                         if (player.dynamic.deputy && !player.isUnseen(1)) isYh = true;
                     }
 
+                    // 获取已有的圆顶元素
                     let skinYh = player.getElementsByClassName("skinYh");
+                    
+                    // 如果需要显示圆顶但不存在，则创建
                     if (isYh && skinYh.length == 0) {
-                        let yh = skinSwitch.createYH(group)
-                        player.append(yh)
-                    } else if (!isYh && skinYh.length > 0) {
+                        let yh = skinSwitch.createYH(group);
+                        player.appendChild(yh);
+                    } 
+                    // 如果不需要显示圆顶但存在，则移除
+                    else if (!isYh && skinYh.length > 0) {
                         player.removeChild(skinYh[0]);
-                    } else if (isYh && skinYh.length > 0) {
-                        let yh = skinYh[0]
-                        let splits = (yh.src || '').split('/')
-                        let sub = splits[splits.length - 1]
-                        let curGroup = sub.split('.')[0]
+                    } 
+                    // 如果需要显示圆顶且已存在，检查是否需要更新
+                    else if (isYh && skinYh.length > 0) {
+                        let yh = skinYh[0];
+                        let srcPath = yh.src || '';
+                        let splits = srcPath.split('/');
+                        let sub = splits[splits.length - 1];
+                        let curGroup = sub.split('.')[0];
+                        
+                        // 如果势力不匹配，则移除旧的圆顶并创建新的
                         if (curGroup !== group) {
-                            skinYh[0].remove()
-                            yh = skinSwitch.createYH(group)
-                            player.append(yh)
+                            skinYh[0].remove();
+                            let newYh = skinSwitch.createYH(group);
+                            player.appendChild(newYh);
                         }
                     }
                 },
@@ -2777,15 +2786,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 },
                 createYH: function (group) {
                     var yh = document.createElement("img");
+                    // 修复圆顶图片路径问题，确保正确加载势力对应的图片
                    // yh.src = skinSwitch.url + "/images/border/" + group + ".png";
-                   yh.src = skinSwitch.url + "/images/border/kongbai.png"
-                    yh.classList.add("skinYh")
+                    // 以下是备用的空白图，如果上面的图片加载失败，可以取消注释使用
+                    yh.src = skinSwitch.url + "/images/border/kongbai.png";
+                    yh.classList.add("skinYh");
                     yh.style.display = "block";
                     yh.style.position = "absolute";
                     yh.style.top = "-22px";
                     yh.style.height = "50px";
                     yh.style.width = "131.1px";
                     yh.style.zIndex = "61";
+                    // 添加onerror处理，确保图片加载失败时有备用方案
+                    yh.onerror = function() {
+                        this.src = skinSwitch.url + "/images/border/weizhi.png";
+                        console.log("势力图标加载失败，使用默认图标");
+                    };
                     return yh;
                 },
                 resetDynamicData: function () {
@@ -5850,10 +5866,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         cursor: pointer;
                     }
                     
-                    .yk-preview__closeBtn .icon-close {
-                        font-size: 32px;
-                    }
-                    
                     .yk-preview__container .yk-preview__list{
                         width: 100%;
                         height: 100%;
@@ -6545,16 +6557,67 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let filesEle = document.getElementById('pfqhFilesList')
                     let curFoldEle = document.getElementById('pfqhCurFold')
 
-                    let currentFoldInfo = {
-                        curFiles: [],  // 存储当前目录下的spine文件列表
-                        curFileIndex: 0,  // 当前在文件夹的索引
-                    }
-
                     let clickName = lib.config.touchscreen ? 'touchend' : 'click'
-
+                    
                     let lastSelFile = null
                     if (!skinSwitch.nodePreviewedInfo) {
                         skinSwitch.nodePreviewedInfo = {};  // 保存已经预览的骨骼的相关数据
+                    }
+
+                    // 添加搜索框 - 确保DOM元素已存在再添加
+                    if (foldsEle && foldsEle.parentNode) {
+                        let searchContainer = document.createElement('div');
+                        searchContainer.className = 'folder-search-container';
+                        searchContainer.style.padding = '5px';
+                        searchContainer.style.marginBottom = '5px';
+                        searchContainer.style.display = 'flex';
+                        searchContainer.style.flexDirection = 'column'; // 改为垂直布局
+                        searchContainer.style.gap = '5px'; // 元素间距
+                        searchContainer.style.maxWidth = '200px'; // 限制最大宽度
+                        searchContainer.innerHTML = `
+                            <input type="text" placeholder="搜索文件夹" id="folderSearchInput" style="width: 100%; padding: 4px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; font-size: 13px;">
+                            <button id="clearSearchBtn" style="width: 100%; padding: 3px 5px; border-radius: 4px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; box-sizing: border-box; font-size: 13px;">清除</button>
+                        `;
+                        foldsEle.parentNode.insertBefore(searchContainer, foldsEle);
+
+                        // 搜索功能实现 - 直接通过创建的元素获取引用
+                        let folderSearchInput = searchContainer.querySelector('#folderSearchInput');
+                        let clearSearchBtn = searchContainer.querySelector('#clearSearchBtn');
+                        
+                        if (folderSearchInput && clearSearchBtn) {
+                            folderSearchInput.addEventListener('input', function() {
+                                let searchValue = this.value;  // 不转为小写，保留中文原样
+                                let allFolders = foldsEle.querySelectorAll('.nd-detail-filename');
+                                
+                                // 第一个是返回上层目录按钮，从第二个开始是文件夹
+                                for (let i = 1; i < allFolders.length; i++) {
+                                    let folderName = allFolders[i].getAttribute('fold');
+                                    if (folderName) {
+                                        // 不转为小写，保留中文原样
+                                        if (searchValue === '' || folderName.indexOf(searchValue) !== -1) {
+                                            allFolders[i].style.display = 'block';
+                                            // 确保元素可交互
+                                            allFolders[i].style.pointerEvents = 'auto';
+                                        } else {
+                                            allFolders[i].style.display = 'none';
+                                            // 不要阻止其他交互
+                                            allFolders[i].style.pointerEvents = 'none';
+                                        }
+                                    }
+                                }
+                            });
+                            
+                            clearSearchBtn.addEventListener(clickName, function() {
+                                folderSearchInput.value = '';
+                                // 触发input事件以更新显示
+                                folderSearchInput.dispatchEvent(new Event('input'));
+                            });
+                        }
+                    }
+
+                    let currentFoldInfo = {
+                        curFiles: [],  // 存储当前目录下的spine文件列表
+                        curFileIndex: 0,  // 当前在文件夹的索引
                     }
 
                     let contentModal = document.getElementById('unique-id').getElementsByClassName('light-modal-body')[0]
@@ -6721,6 +6784,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 `;
                                     div.setAttribute('fold', folds[i]);
                                     div.classList.add('nd-detail-filename');
+                                    div.style.cursor = 'pointer'; // 确保鼠标悬停时显示为可点击状态
                                     div.addEventListener(clickName, function (e) {
                                         if (currentPath) {
                                             currentPath = `${currentPath}/${this.getAttribute('fold')}`
@@ -6728,6 +6792,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             currentPath = this.getAttribute('fold')
                                         }
                                         game.saveConfig(skinSwitch.configKey.lastPreviewPath, currentPath)
+
+                                        // 清除搜索框内容，方便查看新目录内容
+                                        let searchInput = document.querySelector('#folderSearchInput');
+                                        if (searchInput) {
+                                            searchInput.value = '';
+                                        }
 
                                         initFoldsInfo()
                                         e.stopPropagation()
@@ -6739,6 +6809,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 if (_sorts != null) {
                                     sortDirs(_sorts)
                                 }
+                                
+                                // 搜索框值更新后，保持文件夹筛选状态
+                                let folderSearchInput = document.querySelector('#folderSearchInput');
+                                if (folderSearchInput && folderSearchInput.value) {
+                                    folderSearchInput.dispatchEvent(new Event('input'));
+                                }
+                                
                                 for (let i = 1; i < foldsEle.children.length; i++) {
                                     let foldName = foldsEle.children[i].getAttribute('fold')
                                     if (lastDirName && lastDirName === foldName) {
@@ -7097,7 +7174,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let timer = null;
 
                         return function() {
-                            // 通过 ‘this’ 和 ‘arguments’ 获取函数的作用域和变量
+                            // 通过 'this' 和 'arguments' 获取函数的作用域和变量
                             let context = this;
                             let args = arguments;
 
@@ -8938,117 +9015,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     })
                 }
 
-                // 查看参数
-                // showParamsBtn.listen((e) => {
-                //     skinSwitch.postMsgApi.getNodeInfo(player)
-                //     skinSwitch.rendererOnMessage.addListener(player, 'getNodeInfo', (data) => {
-                //         console.log('dataInfo::::  ', data)
-                //         // 直接复制参数
-                //         // 弹出一个框查看参数信息, 也可以快速复制
-                //         // let modal = ui.create.div('.modalParent', document.body)
-                //         // modal.innerHTML = `
-                //         // <style>
-                //         //     .modalParent {
-                //         //       display: flex;
-                //         //       flex-direction: column;
-                //         //       align-items: center;
-                //         //       justify-content: center;
-                //         //       color: #222;
-                //         //       position: relative;
-                //         //       min-height: 100vh;
-                //         //     }
-                //         //
-                //         //     .modal {
-                //         //       display: flex;
-                //         //       flex-direction: column;
-                //         //       justify-content: center;
-                //         //       gap: 0.4rem;
-                //         //       width: 450px;
-                //         //       padding: 1.3rem;
-                //         //       min-height: 250px;
-                //         //       position: absolute;
-                //         //       top: 20%;
-                //         //       background-color: white;
-                //         //       border: 1px solid #ddd;
-                //         //       border-radius: 15px;
-                //         //     }
-                //         //
-                //         //     .modal .flex {
-                //         //       display: flex;
-                //         //       align-items: center;
-                //         //       justify-content: space-between;
-                //         //     }
-                //         //
-                //         //     .modal input {
-                //         //       padding: 0.7rem 1rem;
-                //         //       border: 1px solid #ddd;
-                //         //       border-radius: 5px;
-                //         //       font-size: 0.9em;
-                //         //     }
-                //         //
-                //         //     .modal p {
-                //         //       font-size: 0.9rem;
-                //         //       color: #777;
-                //         //       margin: 0.4rem 0 0.2rem;
-                //         //     }
-                //         //
-                //         //     button {
-                //         //       cursor: pointer;
-                //         //       border: none;
-                //         //       font-weight: 600;
-                //         //     }
-                //         //
-                //         //     .btn {
-                //         //       display: inline-block;
-                //         //       padding: 0.8rem 1.4rem;
-                //         //       font-weight: 700;
-                //         //       background-color: black;
-                //         //       color: white;
-                //         //       border-radius: 5px;
-                //         //       text-align: center;
-                //         //       font-size: 1em;
-                //         //     }
-                //         //
-                //         //     .btn-open {
-                //         //       position: absolute;
-                //         //       bottom: 150px;
-                //         //     }
-                //         //
-                //         //     .btn-close {
-                //         //       transform: translate(10px, -20px);
-                //         //       padding: 0.5rem 0.7rem;
-                //         //       background: #eee;
-                //         //       border-radius: 50%;
-                //         //     }
-                //         //
-                //         // </style>
-                //         // <section class="modal">
-                //         //   <div class="flex">
-                //         //     <img src="user.png" width="50px" height="50px" alt="user" />
-                //         //     <button class="btn-close">⨉</button>
-                //         //   </div>
-                //         //   <div>
-                //         //     <h3>Stay in touch</h3>（保持联系）
-                //         //     <p>
-                //         //       This is a dummy newsletter form so don't bother trying to test it. Not
-                //         //       that I expect you to, anyways.:)（这是一个虚拟的通讯表单，所以不要费心去测试它。反正我也不指望你这么做）
-                //         //     </p>
-                //         //   </div>
-                //         //
-                //         //   <input type="email" id="email" placeholder="brendaneich@js.com" />
-                //         //   <button class="btn">Submit</button>
-                //         // </section>
-                //         // `
-                //
-                //         // const closeModalBtn = modal.querySelector(".btn-close");
-                //         // closeModalBtn.addEventListener("click", () => {
-                //         //     modal.classList.add("hidden");
-                //         // })
-                //
-                //     })
-                // })
-
-                // 增加一个新的方法, 修改全局变量, 尤其是当皮肤也进行了变化
+                // 增加一个新的方法, 修改全局参数, 尤其是当皮肤也进行了变化
                 editBox.updateGlobalParams = function (){
                     // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
                     player = game.me
@@ -9227,7 +9194,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 lib.init.js(skinSwitch.url, 'pfqhUtils', function () {
                     //顶部菜单
                     if (lib.config[skinSwitch.configKey.showEditMenu]) {
-                        // 添加编辑动皮皮肤的位置和出框位置参数
+                        // 添加编辑动皮参数
                         ui.create.system('编辑动皮参数', function() {
                             setTimeout(function() {
                                 if (!lib.config[skinSwitch.configKey.useDynamic]) {
@@ -9499,7 +9466,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             //     init: true,
             //     intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
             // },
-            /*'l2dEnable': {
+            'l2dEnable': {
                 name: "是否开启l2d",
                 init:  false,
                 intro: '添加l2d模型'
@@ -9531,7 +9498,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.l2dLoader.changeModel(base)
                     }
                 },
-            },*/
+            },
             'previewSkinsDynamic': {
                 name: "预览角色使用动皮",
                 "init": true,
@@ -9568,7 +9535,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 translate:{
                 },
             },
-            intro: '更新者：无语<br><br>&nbsp;&nbsp;<font color=#00FF7F>版本号:1.21<br>&nbsp;&nbsp;1.更新前景，添加技能换肤，删除藏珍阁，删除live2d按钮<br>&nbsp;&nbsp;2.添加光污染（小曦）<br>&nbsp;&nbsp;3.当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;4.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;5.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br>&nbsp;&nbsp;6.现在动皮支持json的骨骼以及可以添加alpha预乘参数<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用. 如果想是用UI更好看的动静切换功能, 请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;最后, 感谢墨渊、小曦、//凌梦帮助修改，无名杀超市群的逝去の記憶,鹰击长空、逍遥自在、若水帮忙测试与提出意见, 感谢默.颜提供的骨骼素材, 感谢鸭佬扒的素材<br><br><img style=width:225px src=extension/皮肤切换/皮肤切换logo.png>',
+            intro: '更新者：无语<br><br>&nbsp;&nbsp;<font color=#00FF7F>版本号:1.21<br>&nbsp;&nbsp;1.更新前景，添加技能换肤，删除藏珍阁<br>&nbsp;&nbsp;2.添加光污染（小曦）<br>&nbsp;&nbsp;3.当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;4.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;5.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br>&nbsp;&nbsp;6.现在动皮支持json的骨骼以及可以添加alpha预乘参数<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用.如果想是用UI更好看的动静切换功能,请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;最后,感谢墨渊、小曦、//凌梦帮助前景修改，无名杀超市群的逝去の記憶,鹰击长空、逍遥自在、若水帮忙测试与提出意见,感谢默.颜提供的骨骼素材,感谢鸭佬扒的素材<br><br><img style=width:225px src=extension/皮肤切换/皮肤切换logo.png>',
             // intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;初次使用请先备份并导入十周年UI的animation.js和dynamicWorker.js文件<br>&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有搬自于EngEX扩展的动皮换肤功能,但是并不支持静态皮肤切换, 完整体验需要配合千幻聆音雷修版本,支持动态静态皮肤切换. 本扩展完全兼容千幻雷修并会保持同步更新兼容。<br>&nbsp;&nbsp;注意：由于重新定义了部分函数(logSill)，会和部分扩展的部分内容相互覆盖。<br>&nbsp;&nbsp;<font color=\"red\">每次更新扩展后, 请首先重新覆盖一下原先十周年UI的dynamicWorker文件</font>',
             // intro:"基于EngEX扩展的动态换肤部分魔改.原来使用E佬写的EngEX插件自动出框非常好用,但是非常麻烦的是调整参数不方便, 于是就自己观摩E佬和特效测试扩展大佬的代码编写了调整参数这个简单的扩展\n" +
             //     "基于本人是个后端人员,审美有限(汗),所以换肤部分样式素材基本照搬E佬的EngEX扩展. 第一次写插件,应该有挺多bug,希望见谅.",
@@ -9616,7 +9583,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  */
 
 /** 1.06版本更新:
- 1. 修复了reinit函数没有传player函数导致一些会变身技能的角色初始化报错问题
+ 1. 修复reinit函数没有传player函数导致一些会变身技能的角色初始化报错问题
  2. 瓜佬的限定技特效等需要读取动皮的皮肤放到框内, 适配了这一逻辑, 防止读取不到皮肤的问题.
  3. 配合千幻雷修1.64版本增加了手杀大屏播放出框允许反转的功能.
  4. 增加了出场可以使用待机皮肤进行出场代替.
@@ -9669,7 +9636,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 /** 1.11.1与1.11.2版本更新
  1. 骨骼预览判断更完整, 防止报错
  2. 骨骼预览图层关闭bug
- 3. 手杀骨骼连续出框抽搐抖动问题
+ 3. 手杀骨骼连续出框抽搤抖动问题
  4. 修复ani文件修改导致位置偏移bug
 
  */
@@ -9677,7 +9644,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 /** 1.12版本更新
  1. 更新4.0骨骼预览
  2. 修复晋武将会显示的bug
- 3. 添加ai攻击翻转参数, 根据当前是否在屏幕中央的左侧, 是就就行翻转
+ 3. 添加ai攻击翻转参数, 根据当前是否在屏幕中央的左侧, 是就就行翻转X轴, 也可以在动皮参数处添加参数控制单个动皮的出框翻转
  4. 修复出框模糊问题 (添加dpr适配就行)
  5. 手机预览骨骼时稍微增加下间隙.
 
@@ -9748,7 +9715,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  1. 添加两个时机,
     1) 使命技失败和成功
     2) 添加受伤时机, 更改以前的受伤次数时机
- 2. 修复了安装特效测试使用静皮可能报错的问题.
+ 2. 修复安装特效测试使用静皮可能报错的问题.
  */
 
 /** 1.20版本更新
@@ -9758,4 +9725,4 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  
  /**1.21版本更新
  1.添加前景、光污染、技能变身换肤
- 2.删除藏珍阁和live2d*/
+ 2.删除藏珍阁*/
