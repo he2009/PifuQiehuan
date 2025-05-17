@@ -3,6 +3,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
     return {
         name: "皮肤切换",
         content:function(config,pack) {
+            // 引入调整框样式
+            const adjustBoxStyle = document.createElement('link')
+            adjustBoxStyle.rel = 'stylesheet'
+            adjustBoxStyle.href = lib.assetURL + 'extension/皮肤切换/style/adjustBox.css'
+            document.head.appendChild(adjustBoxStyle)
 
             /* 动皮相关功能 */
             function dynamicInit() {
@@ -57,6 +62,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 // 添加上千幻雷修的调整参数
                                 if (skinSwitch.saveSkinParams[k][m].qhlx) {
                                     decadeUI.dynamicSkin[k][m].qhlx = skinSwitch.saveSkinParams[k][m].qhlx
+                                }
+
+                                // 添加出场出框和特殊出框调整
+                                if (decadeUI.dynamicSkin[k][m].chuchang && skinSwitch.saveSkinParams[k][m].chuchang) {
+                                    decadeUI.dynamicSkin[k][m].chuchang = Object.assign(decadeUI.dynamicSkin[k][m].chuchang, skinSwitch.saveSkinParams[k][m].chuchang)
+                                }
+                                if (decadeUI.dynamicSkin[k][m].teshu && skinSwitch.saveSkinParams[k][m].teshu) {
+                                    decadeUI.dynamicSkin[k][m].teshu = Object.assign(decadeUI.dynamicSkin[k][m].teshu, skinSwitch.saveSkinParams[k][m].teshu)
                                 }
                             }
                         }
@@ -6030,7 +6043,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         height: 70px;
                         line-height: 70px;
                         text-align: center;
-                        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAABGCAYAAADB0cS2AAAAAXNSR0IArs4c6QAAATZJREFUWAntmMFqhDAQhs240bJsKaW3PXkQj77/c3gSEfQFSildFjTVdP6FLD2UzbrJrZOLYsYvM59zcRJrbZpEWDSOo47ASWie5wNnpUJhxJCs7/vnUBghk2VZDl3XvQ3D8PSoM9W27XFLWeu6Wq3195lXXddnpZTF+5eMtoCISHEFOs/zF1ThKtgM+n0o/DLsFX6DQIAC1jTNPhgE2J5XFJAxZhcFhA8QBYTyBAQLt5c4uu0Hu+JIHPkN+COkj8SR34A/QvpIHPkN+COkj8SR34A/Qvro3zrCn3eUz4/f9yggzACCQTxAmDFICAIBUlXVB6YRm0EQm6apmabpkyHvDFnQZTvXaqBnWXYqisK4Tbd3z/UC4hNOZVl+IcV7XvorhpBJKARgQjkhmVyzc2Ob64MHb34AS8NyNtzdbWEAAAAASUVORK5CYII=);
+                        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAATJJREFUOBGNkz1uwkAQhbMrI7mkIBJngFMkt0CKLORIdkFBRcEFKNKkoLItWb5FSp+AJlLuEIWeBv/w3rJYtuNdGMkyO7vfm7czRqRpOiuK4s1xnE/f949PD0SSJIu6ridBEOxFHMc7LLZCiB+IvNwTAbypquoDdU54xpKVCUNkDic5HD2bTLTgCswqDMOz4GFChClictKD32E/I6sE+MMmYoI7AiaRsiyX+s603VTmeUbj4LrsOpFS/gKeYm8QHhRgktdB5W/CqFojtebIuNcP2U9wrW0rGI2ly9A0nX8C7YYBXHMqthF3BNqwbtieH5dNpGniAJzBgQrbiJWADb4nIgEvbHO+CfA/4rrua+s6X9yTaNAE75O+c8akKTzP+9MiB3DjPM8ddTaKopEJMuVv8AXIBQzYmzjo8QAAAABJRU5ErkJggg==);
                         background-repeat: no-repeat;
                         background-size: cover;
                     }
@@ -8050,69 +8063,87 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     initOptions(transTemps, transformTempKV)
                     // 初始化不同骨骼的内容
                     const initDiffSkelInfo = () => {
-                        contentArea.innerHTML= `
-                            <div class="diffBox">
-                               <div class="dyskinSelect">
-                                   <div class="choosePlayerGroup">
-                                        <div class="playerInputGroup"> 
-                                            <div class="playerText">武将id: </div> 
-                                            <input type="text">
-                                            <div class="eventBindButton searchPlayer" id="searchPlayerIdBtn">搜索</div>
-                                         </div>    
-                                         <div class="playerAlpha" id="firstAlphaSearch">
-                                            <div style="position: relative"></div>
-                                            <div style="position: relative"></div>
-                                        </div>
-                                         <div class="wujiangIdList" id="wujiangIdList"></div>
-                                    </div>
-                                    <div class="chooseSkin">
-                                      <div class="labelText">皮肤名称</div><select id="wujiangSkinSelect"></select></div>
-                                    </div>
-                                <div class="transformEffectContent">
-                                    <div class="transEffectHead">
-                                        变换特效: <select id="transEffectSelect"></select>
-                                    </div>
-                                    <div class="transItemBox">
-                                        <div class="transSettingItem">
-                                            <div class="labelText transSettingItemText">大小</div>
-                                            <input type="number" value="0.5" placeholder="0.5" id="transItemScale">
-                                        </div>
-                                        <div class="transSettingItem">
-                                            <div class="labelText transSettingItemText">延时</div>
-                                            <input type="number" value="0.3" placeholder="0.3" id="transItemDelay">
-                                        </div>
-                                        <div class="transSettingItem">
-                                            <div class="labelText transSettingItemText">速度</div>
-                                            <input type="number" value="1" placeholder="1" id="transItemSpeed">
-                                        </div>
-                                        <div class="transSettingItem">
-                                            <div class="labelText transSettingItemText">角度</div>
-                                            <input type="number" value="0" placeholder="0" id="transItemAngle">
-                                        </div>
-                                          <div class="transSettingItem">
-                                            <div class="labelText transSettingItemText">x</div>
-                                            <input type="number" id="transItemX">
-                                        </div>
-                                          <div class="transSettingItem">
-                                            <div class="labelText transSettingItemText">y</div>
-                                            <input type="number" id="transItemY">
-                                        </div>
-                                    </div>                               
+                        contentArea.innerHTML = `
+                            <div class="adjustBox">
+                                <div class="title">角色调整</div>
+                                <div class="closeBtn">×</div>
+                                <div class="btnGroup">
+                                    <div class="btnItem" id="daijiBtn">调整待机</div>
+                                    <div class="btnItem" id="beijingBtn">调整背景</div>
+                                    <div class="btnItem" id="qianjingBtn">调整前景</div>
+                                    <div class="btnItem" id="chukuangBtn">调整出框</div>
+                                    <div class="btnItem" id="chuchangBtn">调整出场</div>
+                                    <div class="btnItem" id="teshuBtn">调整特殊</div>
                                 </div>
-                                
+                                <div class="bottomBtns">
+                                    <div class="btnItem" id="saveBtn">保存</div>
+                                    <div class="btnItem" id="cancelBtn">返回</div>
+                                </div>
                             </div>
                         `
-                        const letterDiv = document.getElementById('firstAlphaSearch')
-                        const wujiangIdList = document.getElementById('wujiangIdList')
-                        const wujiangSkinSelect = document.getElementById('wujiangSkinSelect')
-                        const searchPlayerIdBtn = document.getElementById('searchPlayerIdBtn')
-                        const transEffectSelect = document.getElementById('transEffectSelect')
-                        const transItemScale = document.getElementById('transItemScale')
-                        const transItemDelay = document.getElementById('transItemDelay')
-                        const transItemSpeed = document.getElementById('transItemSpeed')
-                        const transItemAngle = document.getElementById('transItemAngle')
-                        const transItemX = document.getElementById('transItemX')
-                        const transItemY = document.getElementById('transItemY')
+                        const daijiBtn = document.getElementById('daijiBtn')
+                        const beijingBtn = document.getElementById('beijingBtn')
+                        const qianjingBtn = document.getElementById('qianjingBtn')
+                        const chukuangBtn = document.getElementById('chukuangBtn')
+                        const chuchangBtn = document.getElementById('chuchangBtn')
+                        const teshuBtn = document.getElementById('teshuBtn')
+                        const saveBtn = document.getElementById('saveBtn')
+                        const cancelBtn = document.getElementById('cancelBtn')
+                        const closeBtn = document.querySelector('.closeBtn')
+
+                        // 当前选中的按钮
+                        let currentBtn = null
+
+                        // 按钮点击处理函数
+                        const handleBtnClick = (btn, mode) => {
+                            if (currentBtn) {
+                                currentBtn.classList.remove('btnSelect')
+                            }
+                            btn.classList.add('btnSelect')
+                            currentBtn = btn
+                            
+                            // 显示调整界面
+                            showAdjustBar()
+                            showShizi(true)
+                            initPosParams()
+                            
+                            // 播放对应动画
+                            if (mode === 'chuchang') {
+                                skinSwitch.chukuangWorkerApi.chukuangAction(player, 'chuchang')
+                            } else if (mode === 'teshu') {
+                                skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu')
+                            } else {
+                                selfLoopPlay(mode)
+                            }
+                        }
+
+                        // 绑定按钮点击事件
+                        daijiBtn.addEventListener('click', () => handleBtnClick(daijiBtn, 'daiji'))
+                        beijingBtn.addEventListener('click', () => handleBtnClick(beijingBtn, 'beijing'))
+                        qianjingBtn.addEventListener('click', () => handleBtnClick(qianjingBtn, 'qianjing'))
+                        chukuangBtn.addEventListener('click', () => handleBtnClick(chukuangBtn, 'chukuang'))
+                        chuchangBtn.addEventListener('click', () => handleBtnClick(chuchangBtn, 'chuchang'))
+                        teshuBtn.addEventListener('click', () => handleBtnClick(teshuBtn, 'teshu'))
+
+                        // 保存按钮
+                        saveBtn.addEventListener('click', () => {
+                            // 保存当前调整
+                            save()
+                            // 隐藏调整界面
+                            hide(editBox)
+                        })
+
+                        // 取消按钮
+                        cancelBtn.addEventListener('click', () => {
+                            // 隐藏调整界面
+                            hide(editBox)
+                        })
+
+                        // 关闭按钮
+                        closeBtn.addEventListener('click', () => {
+                            // 隐藏调整界面
+                            hide(editBox)
+                        })
 
                         const lettersList  = ['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ']
                         const defaultTransformDir = 'extension/皮肤切换/effects/transform'
@@ -8438,6 +8469,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     chukuang: 'chukuang',
                     beijing: 'beijing',
                     qianjing: 'qianjing',
+                    chuchang: 'chuchang',
+                    teshu: 'teshu',
+                    chuchang: 'chuchang',
+                    teshu: 'teshu'
                 }
                 const funcs = {
                     player: 'player',
@@ -8475,9 +8510,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 const beijingBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
                 const qianjingBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
                 const chukuangBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
-                // const slotHiddenBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
-                // const slotClipBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
-                // const showParamsBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                const chuchangBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                const teshuBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
                 const saveBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
                 const retBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
 
@@ -8487,9 +8521,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 beijingBtn.innerText = '调整背景'
                 qianjingBtn.innerText = '调整前景'
                 chukuangBtn.innerText = '调整出框'
-                // slotHiddenBtn.innerText = '部件隐藏'
-                // slotClipBtn.innerText = '部件裁剪'
-                // showParamsBtn.innerText = '复制参数'
+                chuchangBtn.innerText = '调整出场'
+                teshuBtn.innerText = '调整特殊'
                 saveBtn.innerText = '保存'
                 retBtn.innerText = '返回'
 
@@ -8730,7 +8763,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 let refreshBtnState = (selectDiv) => {
-                    for (let item of [daijiBtn, beijingBtn, qianjingBtn, chukuangBtn]) {
+                    for (let item of [daijiBtn, beijingBtn, qianjingBtn, chukuangBtn, chuchangBtn, teshuBtn]) {
                         if (item === selectDiv) {
                             item.classList.add('btnSelect')
                         } else {
@@ -8817,6 +8850,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     initPosParams()
                     selfLoopPlay(currentMode)
                     refreshBtnState(chukuangBtn)
+                    hide(editBox)
+                })
+
+                chuchangBtn.listen(() => {
+                    currentMode = modes.chuchang
+                    showAdjustBar()
+                    showShizi(true)
+                    initPosParams()
+                    skinSwitch.chukuangWorkerApi.chukuangAction(player, 'chuchang')
+                    refreshBtnState(chuchangBtn)
+                    hide(editBox)
+                })
+
+                teshuBtn.listen(() => {
+                    currentMode = modes.teshu
+                    showAdjustBar()
+                    showShizi(true)
+                    initPosParams()
+                    skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu')
+                    refreshBtnState(teshuBtn)
                     hide(editBox)
                 })
 
@@ -9067,7 +9120,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             daiji: 'daiji',
                             chukuang: 'gongji',
                             beijing: 'beijing',
-                            qianjing: 'qianjing'
+                            qianjing: 'qianjing',
+                            chuchang: 'chuchang',
+                            teshu: 'teshu'
                         }
 
                         // 统一初始化参数
@@ -9454,7 +9509,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             //     init: true,
             //     intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
             // },
-            /*'l2dEnable': {
+            'l2dEnable': {
                 name: "是否开启l2d",
                 init:  false,
                 intro: '添加l2d模型'
@@ -9486,7 +9541,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.l2dLoader.changeModel(base)
                     }
                 },
-            },*/
+            },
             'previewSkinsDynamic': {
                 name: "预览角色使用动皮",
                 "init": true,
@@ -9618,7 +9673,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  4. 可以使用json骨骼作为待机骨骼, 可以使用需要alpha预乘的骨骼
  6. 增加开局和回合开始结束检查角色的框是否正确. 修复界左慈这类可以变换势力的武将
  7. 预览spine添加鼠标控制以及滑动控制大小位置, 双指捏合放大缩小
- 8. 修复动皮出框可能抽搐(极短时间内连续出框)的问题
+ 8. 修复动皮出框可能抽搤抖动问题
 */
 
 /** 1.11.1与1.11.2版本更新

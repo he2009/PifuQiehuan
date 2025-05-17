@@ -1,0 +1,156 @@
+.btn-default {
+    background-color: #c5b898;
+    color: #4d3c33;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-default:hover {
+    background-color: #d6c9a9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-default:active {
+    background-color: #b4a787;
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 选中状态的按钮样式 */
+.btn-selected {
+    background-color: #e1a74a;
+    color: #ffffff;
+}
+
+.btn-selected:hover {
+    background-color: #e8b65d;
+}
+
+.btn-selected:active {
+    background-color: #d99b3a;
+}
+
+/* 点击波纹效果 */
+.btn-default::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10, 10);
+    opacity: 0;
+    transition: transform 0.5s, opacity 1s;
+}
+
+.btn-default:active::after {
+    transform: scale(0, 0);
+    opacity: 0.3;
+    transition: 0s;
+}
+
+/* 禁用状态 */
+.btn-default:disabled {
+    background-color: #d1d1d1;
+    color: #888888;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 大小变体 */
+.btn-large {
+    padding: 12px 24px;
+    font-size: 18px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* 主要按钮 */
+.btn-primary {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #357abd;
+}
+
+.btn-primary:active {
+    background-color: #2a6496;
+}
+
+/* 成功按钮 */
+.btn-success {
+    background-color: #67c23a;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #5daf34;
+}
+
+.btn-success:active {
+    background-color: #529b2e;
+}
+
+/* 警告按钮 */
+.btn-warning {
+    background-color: #e6a23c;
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #cf9236;
+}
+
+.btn-warning:active {
+    background-color: #b88230;
+}
+
+/* 关闭按钮样式 */
+.btn-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    border: none;
+    text-decoration: none;
+}
+
+.btn-close:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+    transform: rotate(90deg);
+}
+
+.btn-close:active {
+    background-color: rgba(0, 0, 0, 0.6);
+    transform: rotate(90deg) scale(0.9);
+} 

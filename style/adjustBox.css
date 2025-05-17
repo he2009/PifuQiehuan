@@ -1,0 +1,149 @@
+.adjustBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: auto;
+        background: linear-gradient(135deg, #f5efe6 0%, #e8dcc9 100%);
+    border-radius: 8px;
+    z-index: 999999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    padding: 20px;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    color: #5c4f3c;
+}
+
+.adjustBox .title {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    background: linear-gradient(to bottom, #8b7355, #5c4f3c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.adjustBox .btnGroup {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 10px;
+}
+
+.adjustBox .btnItem {
+    background: linear-gradient(to bottom, #e8dcc9, #d4c5a9);
+    color: #5c4f3c;
+    padding: 12px 20px;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    border: 1px solid rgba(92, 79, 60, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.adjustBox .btnItem:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: linear-gradient(to bottom, #d4c5a9, #c4b394);
+}
+
+.adjustBox .btnItem:active {
+    transform: translateY(1px);
+}
+
+.adjustBox .btnItem.btnSelect {
+    background: linear-gradient(to bottom, #e4a853, #d49843);
+    color: #fff;
+    border-color: #e4a853;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.adjustBox .btnItem::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+    transform: scale(0);
+    transition: transform 0.3s ease-out;
+}
+
+.adjustBox .btnItem:hover::after {
+    transform: scale(1);
+}
+
+.adjustBox .closeBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #5c4f3c;
+    font-size: 20px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.5);
+}
+
+.adjustBox .closeBtn:hover {
+    background: rgba(92, 79, 60, 0.1);
+    transform: rotate(90deg);
+}
+
+.adjustBox .bottomBtns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.adjustBox .bottomBtns .btnItem {
+    background: linear-gradient(to bottom, #8b7355, #76614a);
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.adjustBox .bottomBtns .btnItem:hover {
+    background: linear-gradient(to bottom, #76614a, #61503f);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.adjustBox {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 500px) {
+    .adjustBox {
+        width: 90%;
+        padding: 15px;
+    }
+    
+    .adjustBox .btnItem {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+} 
