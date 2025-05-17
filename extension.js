@@ -2496,14 +2496,19 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'dynamicSkin': 'extension_皮肤切换_dynamicSkin', // 保存选择的皮肤的历史数据
                     'showEditMenu': 'extension_皮肤切换_showEditMenu', // 是否加入顶部菜单
                     'showPreviewDynamicMenu': 'extension_皮肤切换_showPreviewDynamicMenu', // 预览是否加入顶部菜单
+                    // 'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
                     'hideHuanFu': 'extension_皮肤切换_hideHuanFu',  // 关闭隐藏换肤按钮
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
                     'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
                     'cugDynamicBg': 'extension_皮肤切换_cugDynamicBg',  // 是否裁剪动态背景
+                    // 'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
+                    // 'adjustQhlyFact': 'extension_皮肤切换_adjustQhlyFact',  // 调整预览参数
+                    // 'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
                     'l2dEnable': 'extension_皮肤切换_l2dEnable',  // 是否允许l2d
                     'l2dSetting': 'extension_皮肤切换_l2dSetting',  // l2d配置
-                    'lastPreviewPath': 'extension_皮肤切换_lastPreviewPath',  // 上一次预览路径
-                    'savedPositions': 'extension_皮肤切换_savedPositions'  // 保存的位置参数
+                    'lastPreviewPath': 'extension_皮肤切换_lastPreviewPath',  // 上一次预览的位置
+                    'previewSkinsDynamic': 'extension_皮肤切换_previewSkinsDynamic',  // 预览动皮皮肤使用动皮
+                    'clickPlayerDynamic': 'extension_皮肤切换_clickPlayerDynamic',  // 单击角色出现换肤功能
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -9050,9 +9055,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let saveToFile = function () {
                     let primaryDynamic = player.dynamic.primary.player
+                    // 比对两者, 看是否一样
+                    // 查找dynamicSkin, 获取对应的key
                     let playerName = player.name || player.parentNode.name
-                    if (!playerName) return
-                    
+                    if (playerName) player.name = playerName
+                    else return
                     let dskins = decadeUI.dynamicSkin[playerName]
                     let saveKey
                     for (let k in dskins) {
@@ -9061,7 +9068,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             break
                         }
                     }
-
+                    // 如果当前是调整千幻雷修的情况下, 那么保存千幻雷修的相关参数
                     if (saveKey) {
                         let modeToKey = {
                             daiji: 'daiji',
@@ -9074,56 +9081,61 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!skinSwitch.saveSkinParams) {
                             skinSwitch.saveSkinParams = {}
                         }
-                        if (!skinSwitch.saveSkinParams[playerName]) {
-                            skinSwitch.saveSkinParams[playerName] = {}
+                        if (!skinSwitch.saveSkinParams[player.name]) {
+                            skinSwitch.saveSkinParams[player.name] = {}
                         }
-                        if (!skinSwitch.saveSkinParams[playerName][saveKey]) {
-                            skinSwitch.saveSkinParams[playerName][saveKey] = {}
+                        if (!skinSwitch.saveSkinParams[player.name][saveKey]) {
+                            skinSwitch.saveSkinParams[player.name][saveKey] = {}
                         }
+                        let toSaveData
+                        if (player.isQhlx) {
+                            if (!skinSwitch.saveSkinParams[player.name][saveKey].qhlx) {
+                                skinSwitch.saveSkinParams[player.name][saveKey].qhlx = {}
+                            }
+                            if (currentFunc === funcs.qhDecade) {
+                                if (!skinSwitch.saveSkinParams[player.name][saveKey].qhlx.decade) {
+                                    skinSwitch.saveSkinParams[player.name][saveKey].qhlx.decade = {}
+                                }
+                                toSaveData = skinSwitch.saveSkinParams[player.name][saveKey].qhlx.decade
+                            } else {
+                                toSaveData = skinSwitch.saveSkinParams[player.name][saveKey].qhlx
+                            }
 
-                        let toSaveData = skinSwitch.saveSkinParams[playerName][saveKey]
-                        
-                        // 保存当前模式的位置数据
+                        } else {
+                            toSaveData = skinSwitch.saveSkinParams[player.name][saveKey]
+                        }
                         adjustX[1] = Number(adjustX[1].toFixed(2))
                         adjustY[1] = Number(adjustY[1].toFixed(2))
                         let modeData = {
                             x: adjustX,
                             y: adjustY,
-                            scale: Number(adjustScale.toFixed(2)),
-                            angle: Number(adjustAngle.toFixed(2))
+                            scale:  Number(adjustScale.toFixed(2)),
+                            angle: Number(adjustAngle.toFixed(2)),
                         }
 
                         let k = modeToKey[currentMode]
-                        if (currentMode === modes.daiji) {
-                            Object.assign(toSaveData, modeData)
+                        if (!player.isQhlx && currentMode === modes.daiji) {
+                            skinSwitch.saveSkinParams[player.name][saveKey] = Object.assign(skinSwitch.saveSkinParams[player.name][saveKey], modeData)
                         } else {
-                            if (!toSaveData[k]) toSaveData[k] = {}
-                            Object.assign(toSaveData[k], modeData)
+                            toSaveData[k] = modeData
                         }
-
-                        // 立即保存到文件
+                        // 写到文件
                         let str = `window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =\n`
                         str += JSON.stringify(skinSwitch.saveSkinParams, null, 4)
                         str += '\n}'
-                        
                         game.writeFile(str, skinSwitch.path, 'saveSkinParams.js', function () {
                             console.log('写入saveSkinParams.js成功')
-                            // 同时更新decadeUI.dynamicSkin中的参数
-                            if (!decadeUI.dynamicSkin[playerName]) {
-                                decadeUI.dynamicSkin[playerName] = {}
-                            }
-                            if (!decadeUI.dynamicSkin[playerName][saveKey]) {
-                                decadeUI.dynamicSkin[playerName][saveKey] = {}
-                            }
-                            Object.assign(decadeUI.dynamicSkin[playerName][saveKey], toSaveData)
-                            
                             skinSwitchMessage.show({
                                 type: 'success',
                                 text: '保存成功',
-                                duration: 1500,
-                                closeable: false
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
                             })
                         })
+                        // 修改千幻雷修版本的值
+                        if (skinSwitch.saveSkinParams[player.name][saveKey].qhlx) {
+                            decadeUI.dynamicSkin[player.name][saveKey].qhlx = skinSwitch.saveSkinParams[player.name][saveKey].qhlx
+                        }
                     }
                 }
 
@@ -9454,7 +9466,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             //     init: true,
             //     intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
             // },
-            /*'l2dEnable': {
+            'l2dEnable': {
                 name: "是否开启l2d",
                 init:  false,
                 intro: '添加l2d模型'
@@ -9486,7 +9498,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.l2dLoader.changeModel(base)
                     }
                 },
-            },*/
+            },
             'previewSkinsDynamic': {
                 name: "预览角色使用动皮",
                 "init": true,
@@ -9608,7 +9620,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 /** 1.10版本更新
  1. 修复logSkill bug, 让技能在释放前触发特殊动画
  2. 添加指示线测试. 暂时效果不算很好, 比较乱
- 3. 预览spine添加动画时间显示
+ 3. 预览spine功能添加动画时间显示
  */
 
 /** 1.11版本更新
