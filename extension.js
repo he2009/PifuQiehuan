@@ -9541,7 +9541,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.l2dLoader.changeModel(base)
                     }
                 },
-            },*/
+            }, */
             'previewSkinsDynamic': {
                 name: "预览角色使用动皮",
                 "init": true,
