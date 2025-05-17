@@ -380,7 +380,6 @@ function startPlaySkin(data) {
 			jinchangLabel = t.player.ss_jinchang
 		}
 		if (labels.includes(jinchangLabel)) {
-
 			// 清空原来的state状态, 添加出场
 			t.skeleton.state.setEmptyAnimation(0, 0);
 			t.skeleton.state.setAnimation(0, jinchangLabel, false, 0);
@@ -398,15 +397,31 @@ function startPlaySkin(data) {
 				}
 			}
 		}
+
+		// 应用保存的位置参数
+		if (t.player.savedPosition) {
+			t.x = t.player.savedPosition.x
+			t.y = t.player.savedPosition.y
+			t.scale = t.player.savedPosition.scale
+			t.angle = t.player.savedPosition.angle
+		}
+
 		// 重置一下背景和待机的时间
 		if (beijingNode) {
-			beijingNode.skeleton.state.tracks[0].trackTime = 0
-			t.skeleton.state.tracks[0].trackTime = 0
+			beijingNode.skeleton.state.tracks[0].trackTime = 0;
+			t.skeleton.state.tracks[0].trackTime = 0;
+			beijingNode.opacity = 1;
+
+			// 应用保存的背景位置参数
+			if (t.player.beijing && t.player.beijing.savedPosition) {
+				beijingNode.x = t.player.beijing.savedPosition.x
+				beijingNode.y = t.player.beijing.savedPosition.y
+				beijingNode.scale = t.player.beijing.savedPosition.scale
+				beijingNode.angle = t.player.beijing.savedPosition.angle
+			}
 		}
 		sortNodes();
 		t.opacity = 1;
-		// 将node保存一下, 表示是千幻大屏预览的node
-		t.qhlxBigAvatar = sprite.qhlxBigAvatar
 		return t;
 	}
 
@@ -414,6 +429,13 @@ function startPlaySkin(data) {
 		// 如果已经有主节点，就不需要再创建了，直接关联前景节点
 		if (mainNode) {
 			mainNode.qianjingNode = qianjingNode;
+			// 应用保存的前景位置参数
+			if (mainNode.player.qianjing && mainNode.player.qianjing.savedPosition) {
+				qianjingNode.x = mainNode.player.qianjing.savedPosition.x
+				qianjingNode.y = mainNode.player.qianjing.savedPosition.y
+				qianjingNode.scale = mainNode.player.qianjing.savedPosition.scale
+				qianjingNode.angle = mainNode.player.qianjing.savedPosition.angle
+			}
 			return mainNode;
 		}
 		
@@ -438,7 +460,6 @@ function startPlaySkin(data) {
 			jinchangLabel = t.player.ss_jinchang
 		}
 		if (labels.includes(jinchangLabel)) {
-
 			// 清空原来的state状态, 添加出场
 			t.skeleton.state.setEmptyAnimation(0, 0);
 			t.skeleton.state.setAnimation(0, jinchangLabel, false, 0);
@@ -456,10 +477,27 @@ function startPlaySkin(data) {
 				}
 			}
 		}
+
+		// 应用保存的位置参数
+		if (t.player.savedPosition) {
+			t.x = t.player.savedPosition.x
+			t.y = t.player.savedPosition.y
+			t.scale = t.player.savedPosition.scale
+			t.angle = t.player.savedPosition.angle
+		}
+
 		// 重置一下背景和待机的时间
 		if (qianjingNode) {
 			qianjingNode.skeleton.state.tracks[0].trackTime = 0
 			t.skeleton.state.tracks[0].trackTime = 0
+
+			// 应用保存的前景位置参数
+			if (t.player.qianjing && t.player.qianjing.savedPosition) {
+				qianjingNode.x = t.player.qianjing.savedPosition.x
+				qianjingNode.y = t.player.qianjing.savedPosition.y
+				qianjingNode.scale = t.player.qianjing.savedPosition.scale
+				qianjingNode.angle = t.player.qianjing.savedPosition.angle
+			}
 		}
 		sortNodes();
 		t.opacity = 1;
@@ -1248,125 +1286,133 @@ function debug(data) {
 
 // 调整动皮的位置
 function adjust(data) {
-	let am = animationManagers.getById(data.id);
-	if (!am) return;
-	let dynamic = am.getAnimationBySkinId(data.skinID)
-	let apnode = am.getNodeBySkinId(data.skinID);
-	if (!apnode) return
-	completeParams(apnode)
+    let am = animationManagers.getById(data.id);
+    if (!am) return;
+    let dynamic = am.getAnimationBySkinId(data.skinID)
+    let apnode = am.getNodeBySkinId(data.skinID);
+    if (!apnode) return
+    completeParams(apnode)
 
-	if (data.mode === 'daiji') {
-		if (data.x !== undefined && data.y !== undefined) {
-			apnode.x = data.x
-			apnode.y = data.y
-			apnode.player.x = data.x
-			apnode.player.y = data.y
-		} else if (data.xyPos !== undefined) {
-			if (data.xyPos.x !== undefined) {
-				apnode.x[0] = data.xyPos.x
-				apnode.player.x[0] = data.xyPos.x
-			} else if (data.xyPos.y !== undefined) {
-				apnode.y[0] = data.xyPos.y
-				apnode.player.y[0] = data.xyPos.y
-			}
-		} else if (data.scale !== undefined) {
-			apnode.scale = data.scale
-			apnode.player.scale = data.scale
-		} else if (data.angle !== undefined) {
-			apnode.angle = data.angle
-			apnode.player.angle = data.angle
-		}
-		console.log('当前待机位置参数x', apnode.x, '当前待机位置参数y', apnode.y, 'scale', apnode.scale, 'angle', apnode.angle)
-	} else if (data.mode === 'chukuang') {
-		let actionParams = apnode.player.gongjiAction
-		if (!actionParams) return
-
-		if (data.x !== undefined && data.y !== undefined) {
-			if (apnode.chukuangNode) {
-				apnode.chukuangNode.x = data.x
-				apnode.chukuangNode.y = data.y
-			} else {
-				// 说明是同一节点
-				apnode.x = data.x
-				apnode.y = data.y
-			}
-			// 修改参数
-			actionParams.x = data.x
-			actionParams.y = data.y
-		} else if (data.xyPos) {
-			if (data.xyPos.x !== undefined) {
-				if (apnode.chukuangNode) {
-					apnode.chukuangNode.x[0] = data.xyPos.x
-				} else {
-					apnode.x[0] = data.xyPos.x
-				}
-				actionParams.x[0] = data.xyPos.x
-			} else if (data.xyPos.y !== undefined) {
-				if (apnode.chukuangNode) {
-					apnode.chukuangNode.y[0] = data.xyPos.y
-				} else {
-					apnode.y[0] = data.xyPos.y
-				}
-				actionParams.y[0] = data.xyPos.y
-			}
-		} else if (data.scale !== undefined) {
-			if (apnode.chukuangNode) {
-				apnode.chukuangNode.scale = data.scale
-				actionParams.scale = data.scale
-			} else {
-				apnode.scale = data.scale
-				// 同一个动皮出框通过调整静态大小即可.
-				if (actionParams.scale) {
-					actionParams.scale = data.scale
-				}
-
-			}
-		}
-		actionParams.posAuto = false
-		if (apnode.chukuangNode) {
-			console.log('当前出框位置参数x', apnode.chukuangNode.x, '当前出框位置参数y', apnode.chukuangNode.y, 'scale', apnode.chukuangNode.scale)
-		} else {
-			console.log('当前出框位置参数x', apnode.x, '当前出框位置参数y', apnode.y, 'scale', apnode.scale)
-		}
-	} else if (data.mode === 'beijing') {
-		if (apnode.beijingNode == null) {
-			return
-		}
-		if (data.x != null && data.y != null) {
-			apnode.beijingNode.x = data.x
-			apnode.beijingNode.y = data.y
-		} else if (data.xyPos != null) {
-			if (data.xyPos.x != null) {
-				apnode.beijingNode.x[0] = data.xyPos.x
-			} else if (data.xyPos.y != null) {
-				apnode.beijingNode.y[0] = data.xyPos.y
-			}
-		} else if (data.scale != null) {
-			apnode.beijingNode.scale = data.scale
-		} else if (data.angle != null) {
-			apnode.beijingNode.angle = data.angle
-		}
-		console.log('当前待机位置参数x', apnode.beijingNode.x, '当前待机位置参数y', apnode.beijingNode.y, 'scale', apnode.beijingNode.scale, 'angle', apnode.beijingNode.angle)
-	} else if (data.mode === 'qianjing') {
-		if (apnode.qianjingNode == null) {
-			return
-		}
-		if (data.x != null && data.y != null) {
-			apnode.qianjingNode.x = data.x
-			apnode.qianjingNode.y = data.y
-		} else if (data.xyPos != null) {
-			if (data.xyPos.x != null) {
-				apnode.qianjingNode.x[0] = data.xyPos.x
-			} else if (data.xyPos.y != null) {
-				apnode.qianjingNode.y[0] = data.xyPos.y
-			}
-		} else if (data.scale != null) {
-			apnode.qianjingNode.scale = data.scale
-		} else if (data.angle != null) {
-			apnode.qianjingNode.angle = data.angle
-		}
-		console.log('当前待机位置参数x', apnode.qianjingNode.x, '当前待机位置参数y', apnode.qianjingNode.y, 'scale', apnode.qianjingNode.scale, 'angle', apnode.qianjingNode.angle)
-	}
+    if (data.mode === 'daiji') {
+        if (data.x !== undefined && data.y !== undefined) {
+            apnode.x = data.x
+            apnode.y = data.y
+            apnode.player.x = data.x
+            apnode.player.y = data.y
+        } else if (data.xyPos !== undefined) {
+            if (data.xyPos.x !== undefined) {
+                apnode.x[0] = data.xyPos.x
+                apnode.player.x[0] = data.xyPos.x
+            } else if (data.xyPos.y !== undefined) {
+                apnode.y[0] = data.xyPos.y
+                apnode.player.y[0] = data.xyPos.y
+            }
+        } else if (data.scale !== undefined) {
+            apnode.scale = data.scale
+            apnode.player.scale = data.scale
+        } else if (data.angle !== undefined) {
+            apnode.angle = data.angle
+            apnode.player.angle = data.angle
+        }
+        // 保存参数到player对象
+        if (apnode.player) {
+            apnode.player.savedPosition = {
+                x: apnode.x,
+                y: apnode.y,
+                scale: apnode.scale,
+                angle: apnode.angle
+            }
+        }
+        console.log('当前待机位置参数x', apnode.x, '当前待机位置参数y', apnode.y, 'scale', apnode.scale, 'angle', apnode.angle)
+    } else if (data.mode === 'beijing') {
+        if (apnode.beijingNode == null) {
+            return
+        }
+        if (data.x != null && data.y != null) {
+            apnode.beijingNode.x = data.x
+            apnode.beijingNode.y = data.y
+            if (apnode.player && apnode.player.beijing) {
+                apnode.player.beijing.x = data.x
+                apnode.player.beijing.y = data.y
+            }
+        } else if (data.xyPos != null) {
+            if (data.xyPos.x != null) {
+                apnode.beijingNode.x[0] = data.xyPos.x
+                if (apnode.player && apnode.player.beijing) {
+                    apnode.player.beijing.x[0] = data.xyPos.x
+                }
+            } else if (data.xyPos.y != null) {
+                apnode.beijingNode.y[0] = data.xyPos.y
+                if (apnode.player && apnode.player.beijing) {
+                    apnode.player.beijing.y[0] = data.xyPos.y
+                }
+            }
+        } else if (data.scale != null) {
+            apnode.beijingNode.scale = data.scale
+            if (apnode.player && apnode.player.beijing) {
+                apnode.player.beijing.scale = data.scale
+            }
+        } else if (data.angle != null) {
+            apnode.beijingNode.angle = data.angle
+            if (apnode.player && apnode.player.beijing) {
+                apnode.player.beijing.angle = data.angle
+            }
+        }
+        // 保存背景参数
+        if (apnode.player && apnode.player.beijing) {
+            apnode.player.beijing.savedPosition = {
+                x: apnode.beijingNode.x,
+                y: apnode.beijingNode.y,
+                scale: apnode.beijingNode.scale,
+                angle: apnode.beijingNode.angle
+            }
+        }
+        console.log('当前背景位置参数x', apnode.beijingNode.x, '当前背景位置参数y', apnode.beijingNode.y, 'scale', apnode.beijingNode.scale, 'angle', apnode.beijingNode.angle)
+    } else if (data.mode === 'qianjing') {
+        if (apnode.qianjingNode == null) {
+            return
+        }
+        if (data.x != null && data.y != null) {
+            apnode.qianjingNode.x = data.x
+            apnode.qianjingNode.y = data.y
+            if (apnode.player && apnode.player.qianjing) {
+                apnode.player.qianjing.x = data.x
+                apnode.player.qianjing.y = data.y
+            }
+        } else if (data.xyPos != null) {
+            if (data.xyPos.x != null) {
+                apnode.qianjingNode.x[0] = data.xyPos.x
+                if (apnode.player && apnode.player.qianjing) {
+                    apnode.player.qianjing.x[0] = data.xyPos.x
+                }
+            } else if (data.xyPos.y != null) {
+                apnode.qianjingNode.y[0] = data.xyPos.y
+                if (apnode.player && apnode.player.qianjing) {
+                    apnode.player.qianjing.y[0] = data.xyPos.y
+                }
+            }
+        } else if (data.scale != null) {
+            apnode.qianjingNode.scale = data.scale
+            if (apnode.player && apnode.player.qianjing) {
+                apnode.player.qianjing.scale = data.scale
+            }
+        } else if (data.angle != null) {
+            apnode.qianjingNode.angle = data.angle
+            if (apnode.player && apnode.player.qianjing) {
+                apnode.player.qianjing.angle = data.angle
+            }
+        }
+        // 保存前景参数
+        if (apnode.player && apnode.player.qianjing) {
+            apnode.player.qianjing.savedPosition = {
+                x: apnode.qianjingNode.x,
+                y: apnode.qianjingNode.y,
+                scale: apnode.qianjingNode.scale,
+                angle: apnode.qianjingNode.angle
+            }
+        }
+        console.log('当前前景位置参数x', apnode.qianjingNode.x, '当前前景位置参数y', apnode.qianjingNode.y, 'scale', apnode.qianjingNode.scale, 'angle', apnode.qianjingNode.angle)
+    }
 }
 
 // 调整动皮v2

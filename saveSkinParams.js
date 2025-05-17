@@ -95,6 +95,36 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 "angle": 0
             }
         }
+    },
+    "caohua": {
+        "彩蝶恋花": {
+            "gongji": {
+                "x": [
+                    0,
+                    0.74
+                ],
+                "y": [
+                    0,
+                    0.34
+                ],
+                "scale": 0.61,
+                "angle": 0
+            }
+        }
+    },
+    "wangyi": {
+        "巾帼花武": {
+            "x": [
+                0,
+                0.53
+            ],
+            "y": [
+                0,
+                0.51
+            ],
+            "scale": 0.87,
+            "angle": -15
+        }
     }
 }
 }
