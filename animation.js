@@ -1244,6 +1244,14 @@ var newDuilib;
 					height: this.height,
 					sprite: sprite,
 				});
+					this.renderer.onmessage = function (e) {
+                    if (e.data.type === 'loadFinish') {
+                        this.renderer.postMessage({
+                            message: 'StartPlay',
+                            data: e.data,
+                        })
+                    }
+                }.bind(this);//没有监听处理加载完成的消息,导致皮肤根本不加载,所以加个监听事件
 			} else {
 				var dynamic = this.renderer;
 				dynamic.useMipMaps = this.useMipMaps;
