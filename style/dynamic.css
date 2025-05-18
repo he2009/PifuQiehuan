@@ -27,20 +27,8 @@
     right: 0;
     background-image: url("../images/base/pifu.png");
     background-size: 100% 100%;
-    z-index: 10;
+    z-index:10;
     transform: translateY(-60%);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.switchSkinButton:hover {
-    transform: translateY(-60%) scale(1.05);
-    filter: brightness(1.1);
-}
-
-.switchSkinButton:active {
-    transform: translateY(-60%) scale(0.95);
-    filter: brightness(0.95);
 }
 
 .skinBox {
