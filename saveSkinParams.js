@@ -5,125 +5,31 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             "qianjing": {
                 "x": [
                     0,
-                    0.61
+                    0.6
                 ],
                 "y": [
                     0,
-                    0.28
+                    0.36
                 ],
                 "scale": 0.21,
                 "angle": 0
             }
         }
     },
-    "re_zhonghui": {
-        "潜蛟觊天": {
+    "bailingyun": {
+        "蝶翼婉渡": {
             "gongji": {
                 "x": [
                     0,
-                    0.48
+                    0.8
                 ],
                 "y": [
                     0,
-                    0.56
+                    0.31
                 ],
-                "scale": 0.32,
+                "scale": 0.9,
                 "angle": 0
             }
-        }
-    },
-    "re_fengfangnv": {
-        "窗影镜花": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.82
-                ],
-                "y": [
-                    0,
-                    0.11
-                ],
-                "scale": 0.73,
-                "angle": 0
-            }
-        }
-    },
-    "zhangjinyun": {
-        "金蛟巧刻": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.76
-                ],
-                "y": [
-                    0,
-                    0.26
-                ],
-                "scale": 0.57,
-                "angle": 0
-            }
-        }
-    },
-    "sb_xiaoqiao": {
-        "丽质天成": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.52
-                ],
-                "y": [
-                    0,
-                    0.52
-                ],
-                "scale": 0.61,
-                "angle": 0
-            }
-        }
-    },
-    "shen_zhaoyun": {
-        "鳞振九霄": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.5
-                ],
-                "y": [
-                    0,
-                    0.5
-                ],
-                "scale": 0.57,
-                "angle": 0
-            }
-        }
-    },
-    "caohua": {
-        "彩蝶恋花": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.74
-                ],
-                "y": [
-                    0,
-                    0.34
-                ],
-                "scale": 0.61,
-                "angle": 0
-            }
-        }
-    },
-    "wangyi": {
-        "巾帼花武": {
-            "x": [
-                0,
-                0.53
-            ],
-            "y": [
-                0,
-                0.51
-            ],
-            "scale": 0.87,
-            "angle": -15
         }
     }
 }
