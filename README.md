@@ -372,6 +372,14 @@ tenggongzhu: {
 					flipX: true,
                     // ck: false,  // 出框与否, 表示攻击不出框,只改变骨骼原本位置. 拼音chukuang缩写, 此处也必须要求和原来的骨骼名称一致,才会有效. 不同骨骼此参数无效. 
 				},
+				// 新增：配置特殊动作和攻击动作的专属音效
+				gongjiAudio: "attack", // 指定攻击动作(GongJi)的专属音效文件名，不含扩展名，会自动寻找对应的mp3文件
+				teshuAudio: "skill",   // 指定特殊动作(TeShu)的专属音效文件名，不含扩展名，会自动寻找对应的mp3文件
+				// 音效文件优先搜索顺序：
+				// 1. extension/十周年UI/assets/dynamic/[指定的音效名]_teshu.mp3 或 [指定的音效名].mp3
+				// 2. extension/皮肤切换/audio/effect/[指定的音效名]_teshu.mp3 或 [指定的音效名].mp3
+				// 3. 默认角色同名音效文件
+				
 				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
 				chuchang: {  // 每一个回合开始前播放
 					name: "滕公主/菡萏慕卿/chuchang",

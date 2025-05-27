@@ -312,36 +312,7 @@ box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255,
 }
 
 
-/* l2d的配置*/
-.l2d-hoverBox {
-    position: fixed;
-    z-index: 60;
-    width: 180px;
-    height: 180px;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.l2d-hoverBox .l2d-hoverBtn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-left: 50px;
-    margin-top: 20px;
-    background-color: rgb(78 71 59);
-    text-align: center;
-    line-height: 40px;
-}
-
-.l2d-hoverBox .l2d-next-hoverBtn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-left: 107px;
-    margin-top: 64px;
-    background-color: rgb(78 71 59);
-    text-align: center;
-    line-height: 40px;
-}
+/* 已删除l2d的相关样式 */
 
 /* 以下样式来自于千幻聆音 */
 .l2d-tool-background{
@@ -770,4 +741,84 @@ box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255,
     width: 100%;
     height: 100%;
     pointer-events: none;
+}
+
+/* 新增：拖拽手柄样式 */
+.skin-drag-handle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    cursor: move;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.skin-drag-handle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.skin-drag-handle:active {
+    transform: scale(0.95);
+}
+
+.skin-drag-handle::before {
+    content: "⋮⋮";
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: -2px;
+}
+
+/* 拖拽状态下的样式 */
+#skinDiv2.dragging {
+    transition: none !important;
+    user-select: none;
+}
+
+#skinDiv2.dragging * {
+    pointer-events: none;
+}
+
+/* 确保拖拽手柄在拖拽时仍然可以交互 */
+#skinDiv2.dragging .skin-drag-handle {
+    pointer-events: auto;
+}
+
+/* 千幻小窗拖拽状态样式 */
+.pfqh-qh-skinchange-dialog.dragging {
+    transition: none !important;
+    user-select: none;
+}
+
+.pfqh-qh-skinchange-dialog.dragging * {
+    pointer-events: none;
+}
+
+.pfqh-qh-skinchange-dialog.dragging .skin-drag-handle {
+    pointer-events: auto;
+}
+
+/* 角色调整窗口拖拽状态样式 */
+.editDynamic.dragging {
+    transition: none !important;
+    user-select: none;
+}
+
+.editDynamic.dragging * {
+    pointer-events: none;
+}
+
+.editDynamic.dragging .skin-drag-handle {
+    pointer-events: auto;
 }

@@ -5847,8 +5847,22 @@ var spine_4 = (() => {
     }
     setSkinByName(skinName) {
       let skin = this.data.findSkin(skinName);
-      if (!skin)
-        throw new Error("Skin not found: " + skinName);
+      if (!skin) {
+        console.warn("Skin not found: " + skinName + ", attempting to use default skin or first available skin");
+        // 尝试使用默认皮肤
+        if (this.data.defaultSkin) {
+          this.setSkin(this.data.defaultSkin);
+          return;
+        }
+        // 如果没有默认皮肤，使用第一个可用皮肤
+        if (this.data.skins && this.data.skins.length > 0) {
+          this.setSkin(this.data.skins[0]);
+          return;
+        }
+        // 如果没有任何皮肤，只记录警告但不抛出错误，让程序继续运行
+        console.warn("No skins available in skeleton data, continuing without skin");
+        return;
+      }
       this.setSkin(skin);
     }
     setSkin(newSkin) {

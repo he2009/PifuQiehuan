@@ -26,7 +26,7 @@ let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程�
 
 let isMobile = false
 let dpr = 1
-let modifyQhlxPreview
+// 已删除modifyQhlxPreview变量
 
 let isQhlxDecade = false  // 标明当前是否是千幻的十周年样式.
 
@@ -179,43 +179,7 @@ function playSkin(am, data) {
 			let skelType = sprite.player.json ? 'json' : 'skel'
 			try {
 				let setNewScale = () => {
-					if (sprite.qhlxBigAvatar && modifyQhlxPreview) {
-						dynamic.update({
-							//width: player.divPos.width,
-							//height: player.divPos.height,
-							dpr: dpr,
-						})
-						// let oldScale = player.scale / player.largeFactor
-						// let fact = qhlxFactor
-						// let mul = Math.min( player.divPos.width / 120 , player.divPos.height / 200) * oldScale
-						// sprite.scale = mul * fact
-						// player.scale = mul * fact
-						//
-						// if (sprite.x[1] < 0) {
-						// 	sprite.x[1] += (-mul * player.divPos.width * sprite.x[1] / fact * 0.6) / (mul * fact * player.divPos.width)
-						// }  else {
-						// 	sprite.x[1] += qhlxFactor * 0.1
-						// }
-						// if (sprite.y[1] < 0) {
-						// 	let yy = -sprite.y[1]
-						//
-						// 	if (yy < 0.1) {
-						// 		yy = yy * 3
-						// 	} else if (yy < 0.2) {
-						//
-						// 	}else if(yy < 0.35){
-						// 		yy *= 0.8
-						// 	} else if(yy < 0.5) {
-						// 		yy = yy * 0.6
-						// 	} else {
-						// 		yy = yy * 0.4
-						// 	}
-						// 	sprite.y[1] += (mul * player.divPos.height * yy / fact * 0.6) / (mul * fact * player.divPos.height)
-						// } else {
-						// 	sprite.y[1] += qhlxFactor * 0.15
-						// }
-
-					}
+					// 已删除千幻大屏预览待机大小调整功能
 				}
 				// 停止并移除旧的骨骼动画节点
 				if (dynamic.nodes.length > 0) {
@@ -329,7 +293,7 @@ function create(data) {
 	if (animationManagers.length >= 4) return;
 	let am = new AnimationManager(data.pathPrefix, data.canvas, data.id);
 	if (data.dpr) dpr = data.dpr
-	modifyQhlxPreview = data.modifyQhlxPreview
+	// 已删除modifyQhlxPreview参数
 	animationManagers.push(am);
 }
 
@@ -364,12 +328,34 @@ function startPlaySkin(data) {
 		t.beijingNode = beijingNode
 
 		let skins = t.skeleton.data.skins
-		if (sprite.player.skin) {
+		if (sprite.player.skin && skins && skins.length > 0) {
+			let skinFound = false;
 			for (let i = 0; i < skins.length; i++) {
 				if (skins[i].name === sprite.player.skin) {
 					// 设置skin
-					t.skeleton.setSkinByName(skins[i].name);
+					try {
+						t.skeleton.setSkinByName(skins[i].name);
+						t.skeleton.setSlotsToSetupPose();
+						skinFound = true;
+					} catch (e) {
+						console.warn('Failed to set skin:', skins[i].name, e);
+					}
+					break;
+				}
+			}
+			// 如果指定的皮肤不存在，尝试使用默认皮肤或第一个可用皮肤
+			if (!skinFound) {
+				try {
+					// 优先尝试使用默认皮肤
+					if (t.skeleton.data.defaultSkin) {
+						t.skeleton.setSkin(t.skeleton.data.defaultSkin);
+					} else if (skins.length > 0) {
+						// 如果没有默认皮肤，使用第一个可用皮肤
+						t.skeleton.setSkinByName(skins[0].name);
+					}
 					t.skeleton.setSlotsToSetupPose();
+				} catch (e) {
+					console.warn('Failed to set fallback skin:', e);
 				}
 			}
 		}
@@ -422,12 +408,34 @@ function startPlaySkin(data) {
 		t.qianjingNode = qianjingNode
 
 		let skins = t.skeleton.data.skins
-		if (sprite.player.skin) {
+		if (sprite.player.skin && skins && skins.length > 0) {
+			let skinFound = false;
 			for (let i = 0; i < skins.length; i++) {
 				if (skins[i].name === sprite.player.skin) {
 					// 设置skin
-					t.skeleton.setSkinByName(skins[i].name);
+					try {
+						t.skeleton.setSkinByName(skins[i].name);
+						t.skeleton.setSlotsToSetupPose();
+						skinFound = true;
+					} catch (e) {
+						console.warn('Failed to set skin:', skins[i].name, e);
+					}
+					break;
+				}
+			}
+			// 如果指定的皮肤不存在，尝试使用默认皮肤或第一个可用皮肤
+			if (!skinFound) {
+				try {
+					// 优先尝试使用默认皮肤
+					if (t.skeleton.data.defaultSkin) {
+						t.skeleton.setSkin(t.skeleton.data.defaultSkin);
+					} else if (skins.length > 0) {
+						// 如果没有默认皮肤，使用第一个可用皮肤
+						t.skeleton.setSkinByName(skins[0].name);
+					}
 					t.skeleton.setSlotsToSetupPose();
+				} catch (e) {
+					console.warn('Failed to set fallback skin:', e);
 				}
 			}
 		}
@@ -867,7 +875,9 @@ function action(data) {
 				// 重新恢复攻击pose
 				// playNode.skeleton.setToSetupPose()
 				if (data.action === 'chuchang') {
-					actualPlayNode.scaleTo(actualPlayNode.scale * 1.2, 500)
+					// 出场动画直接使用调整后的大小，不进行额外的放大缩小
+					// 保持当前设置的scale值不变
+					// 注释掉放大缩小逻辑，让角色按照调整的大小直接播放
 				}
 			} else {
 				playAction(apnode, animation);
@@ -1720,9 +1730,23 @@ function changeSkelSkin(data) {
 	if (specifySkinName) {
 		for (let i = 0; i < skins.length; i++) {
 			if (skins[i].name === specifySkinName) {
-				apnode.skeleton.setSkinByName(specifySkinName);
-				apnode.skeleton.setSlotsToSetupPose();
-				return
+				try {
+					apnode.skeleton.setSkinByName(specifySkinName);
+					apnode.skeleton.setSlotsToSetupPose();
+					return
+				} catch (e) {
+					console.warn('Failed to set skin:', specifySkinName, e);
+					// 如果设置指定皮肤失败，尝试使用默认皮肤
+					if (apnode.skeleton.data.defaultSkin) {
+						try {
+							apnode.skeleton.setSkin(apnode.skeleton.data.defaultSkin);
+							apnode.skeleton.setSlotsToSetupPose();
+						} catch (e2) {
+							console.warn('Failed to set default skin:', e2);
+						}
+					}
+					return
+				}
 			}
 		}
 	}
@@ -1736,9 +1760,14 @@ function changeSkelSkin(data) {
 				if (j === skins.length) {
 					j = 0
 				}
-				apnode.skeleton.setSkinByName(skins[j].name);
-				apnode.skeleton.setSlotsToSetupPose();
-				return
+				try {
+					apnode.skeleton.setSkinByName(skins[j].name);
+					apnode.skeleton.setSlotsToSetupPose();
+					return
+				} catch (e) {
+					console.warn('Failed to set skin:', skins[j].name, e);
+					return
+				}
 			}
 		}
 	}
