@@ -1,79 +1,191 @@
-window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =
+window.skinSwitchLoadParams = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =
 {
-    "caoxiancaohua": {
-        "锦瑟良缘": {
-            "qianjing": {
-                "x": [
-                    0,
-                    0.67
-                ],
-                "y": [
-                    0,
-                    0.32
-                ],
-                "scale": 0.23,
-                "angle": 0
-            }
-        },
-        "锦瑟良缘2": {
-            "qianjing": {
-                "x": [
-                    0,
-                    0.55
-                ],
-                "y": [
-                    0,
-                    0.72
-                ],
-                "scale": 0.6,
-                "angle": 0
-            },
+    "yue_daqiao": {
+        "暖风恋心": {
             "x": [
                 0,
-                0.36
+                0.48
             ],
             "y": [
                 0,
-                0.5
+                0.44
             ],
-            "scale": 0.7,
+            "scale": 0.89,
+            "angle": 10
+        }
+    },
+    "caoxian": {
+        "掬水戏荷": {
+            "x": [
+                0,
+                0.54
+            ],
+            "y": [
+                0,
+                0.59
+            ],
+            "scale": 0.69,
             "angle": 0
         }
     },
-    "bailingyun": {
-        "蝶翼婉渡": {
-            "gongji": {
+    "dc_zhaoxiang": {
+        "月痕芳影": {
+            "x": [
+                0,
+                0.5
+            ],
+            "y": [
+                0,
+                0.55
+            ],
+            "scale": 0.76,
+            "angle": -9,
+            "beijing": {
                 "x": [
                     0,
-                    0.8
+                    0.63
                 ],
                 "y": [
                     0,
-                    0.31
+                    0.38
+                ],
+                "scale": 0.37,
+                "angle": 0
+            }
+        }
+    },
+    "wangtao": {
+        "春悦桃秾": {
+            "x": [
+                0,
+                0.5
+            ],
+            "y": [
+                0,
+                0.48
+            ],
+            "scale": 0.85,
+            "angle": -10
+        }
+    },
+    "sb_caopi": {
+        "虎啸龙吟": {
+            "x": [
+                0,
+                0.19
+            ],
+            "y": [
+                0,
+                0.52
+            ],
+            "scale": 0.29,
+            "angle": 0
+        }
+    },
+    "luyi": {
+        "姝丽风华": {
+            "x": [
+                0,
+                0.48
+            ],
+            "y": [
+                0,
+                0.56
+            ],
+            "scale": 0.75,
+            "angle": 0
+        }
+    },
+    "re_zhonghui": {
+        "潜蛟觊天": {
+            "x": [
+                0,
+                0.04
+            ],
+            "y": [
+                0,
+                0.55
+            ],
+            "scale": 0.26,
+            "angle": 0
+        }
+    },
+    "Mbaby_caoang": {
+        "醉玉颓山": {
+            "x": [
+                0,
+                0.48
+            ],
+            "y": [
+                0,
+                0.53
+            ],
+            "scale": 0.77,
+            "angle": 0,
+            "teshu": {
+                "x": [
+                    0,
+                    0.5
+                ],
+                "y": [
+                    0,
+                    0.5
                 ],
                 "scale": 0.9,
                 "angle": 0
             }
         }
     },
-    "zhangqiying": {
-        "定心锁意": {
-            "gongji": {
+    "tianshangyi": {
+        "姝丽风华": {
+            "x": [
+                0,
+                0.52
+            ],
+            "y": [
+                0,
+                0.55
+            ],
+            "scale": 0.79,
+            "angle": -6
+        }
+    },
+    "yue_caiwenji": {
+        "姝丽风华": {
+            "x": [
+                0,
+                0.51
+            ],
+            "y": [
+                0,
+                0.47
+            ],
+            "scale": 0.89,
+            "angle": 0,
+            "teshu": {
                 "x": [
                     0,
-                    0.61
+                    0.79
                 ],
                 "y": [
                     0,
-                    0.47
+                    0.25
                 ],
-                "scale": 0.4,
+                "scale": 0.59,
                 "angle": 0
-            }
-        }
-    },
-    "re_fengfangnv": {
-        "窗影镜花": {
+            },
+            "chuchang": {
+                "x": [
+                    0,
+                    0.8
+                ],
+                "y": [
+                    0,
+                    0.28
+                ],
+                "scale": 0.8,
+                "angle": 0
+            },
             "gongji": {
                 "x": [
                     0,
@@ -81,291 +193,25 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 ],
                 "y": [
                     0,
-                    0.13
-                ],
-                "scale": 0.91,
-                "angle": 0
-            }
-        }
-    },
-    "shen_guojia": {
-        "倚星折月": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.5
-                ],
-                "y": [
-                    0,
-                    0.57
-                ],
-                "scale": 0.4,
-                "angle": 0
-            }
-        },
-        "倚星折月2": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.45
-                ],
-                "y": [
-                    0,
-                    0.55
-                ],
-                "scale": 0.5,
-                "angle": 0
-            }
-        }
-    },
-    "zhugeruoxue": {
-        "姝丽风华": {
-            "chuchang": {
-                "x": [
-                    0,
-                    0.8
-                ],
-                "y": [
-                    0,
-                    0.26
-                ],
-                "scale": 0.73,
-                "angle": 0
-            }
-        }
-    },
-    "mb_caomao": {
-        "向死存魏": {
-            "x": [
-                0,
-                -0.24
-            ],
-            "y": [
-                0,
-                0.33
-            ],
-            "scale": 0.57,
-            "angle": 0
-        }
-    },
-    "ol_guozhao": {
-        "龙佑倾城": {
-            "chuchang": {
-                "x": [
-                    0,
-                    0.76
-                ],
-                "y": [
-                    0,
-                    0.41
-                ],
-                "scale": 0.96,
-                "angle": 0
-            }
-        }
-    },
-    "ol_sb_huaxiong": {
-        "势吞海岳": {
-            "x": [
-                0,
-                0.34
-            ],
-            "y": [
-                0,
-                0.42
-            ],
-            "scale": 0.79,
-            "angle": 0
-        }
-    },
-    "xuelingyun": {
-        "锦织翠鸾": {
-            "x": [
-                0,
-                0.53
-            ],
-            "y": [
-                0,
-                0.43
-            ],
-            "scale": 1.04,
-            "angle": 0,
-            "chuchang": {
-                "x": [
-                    0,
-                    0.76
-                ],
-                "y": [
-                    0,
-                    0.24
-                ],
-                "scale": 0.87,
-                "angle": 0
-            }
-        }
-    },
-    "tw_zhaoxiang": {
-        "含泪桃花": {
-            "x": [
-                0,
-                0.49
-            ],
-            "y": [
-                0,
-                0.45
-            ],
-            "scale": 0.33,
-            "angle": 0
-        }
-    },
-    "lvlingqi": {
-        "冰魄映雪": {
-            "chuchang": {
-                "x": [
-                    0,
-                    0.78
-                ],
-                "y": [
-                    0,
-                    0.4
-                ],
-                "scale": 0.84,
-                "angle": 0
-            }
-        }
-    },
-    "yuantanyuanshang": {
-        "常棣失华": {
-            "beijing": {
-                "x": [
-                    0,
-                    0.66
-                ],
-                "y": [
-                    0,
-                    0.39
-                ],
-                "scale": 0.68,
-                "angle": 0
-            },
-            "x": [
-                0,
-                0.46
-            ],
-            "y": [
-                0,
-                0.47
-            ],
-            "scale": 0.44,
-            "angle": 0
-        }
-    },
-    "miheng": {
-        "击鼓骂曹": {
-            "beijing": {
-                "x": [
-                    0,
-                    0.53
-                ],
-                "y": [
-                    0,
-                    0.49
-                ],
-                "scale": 0.3,
-                "angle": 0
-            }
-        }
-    },
-    "tw_zhugeguo": {
-        "仙池起舞": {
-            "beijing": {
-                "x": [
-                    0,
-                    -0.42
-                ],
-                "y": [
-                    0,
-                    0.48
-                ],
-                "scale": 0.3,
-                "angle": 0
-            }
-        }
-    },
-    "qinghegongzhu": {
-        "荷怜清盈": {
-            "beijing": {
-                "x": [
-                    0,
-                    0.5
-                ],
-                "y": [
-                    0,
-                    0.45
-                ],
-                "scale": 0.62,
-                "angle": 0
-            }
-        }
-    },
-    "jsrg_liubei": {
-        "明良千古": {
-            "x": [
-                0,
-                0.77
-            ],
-            "y": [
-                0,
-                0.56
-            ],
-            "scale": 0.24,
-            "angle": 8
-        }
-    },
-    "fanyufeng": {
-        "斟酒入情": {
-            "x": [
-                0,
-                0.57
-            ],
-            "y": [
-                0,
-                0.51
-            ],
-            "scale": 0.7,
-            "angle": 0
-        }
-    },
-    "caohua": {
-        "彩蝶恋花": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.69
-                ],
-                "y": [
-                    0,
-                    0.33
+                    0.27
                 ],
                 "scale": 0.57,
                 "angle": 0
             }
         }
     },
-    "tangji": {
-        "战场绝版": {
-            "gongji": {
-                "x": [
-                    0,
-                    0.37
-                ],
-                "y": [
-                    0,
-                    0.62
-                ],
-                "scale": 0.7,
-                "angle": 0
-            }
+    "zhangjinyun": {
+        "瑶影浣月": {
+            "x": [
+                0,
+                0.48
+            ],
+            "y": [
+                0,
+                0.47
+            ],
+            "scale": 0.4,
+            "angle": -3
         }
     }
 }

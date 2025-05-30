@@ -1,0 +1,13 @@
+
+shouji2.png
+size: 98,98
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tx/guang05
+  rotate: false
+  xy: 2, 3
+  size: 94, 93
+  orig: 102, 102
+  offset: 4, 4
+  index: -1
