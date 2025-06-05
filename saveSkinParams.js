@@ -39,7 +39,7 @@ window.skinSwitchLoadParams = function(lib, game, ui, get, ai, _status){window.s
                 0.55
             ],
             "scale": 0.76,
-            "angle": -9,
+            "angle": -2,
             "beijing": {
                 "x": [
                     0,
@@ -212,6 +212,78 @@ window.skinSwitchLoadParams = function(lib, game, ui, get, ai, _status){window.s
             ],
             "scale": 0.4,
             "angle": -3
+        }
+    },
+    "lvlingqi": {
+        "冰魄映雪": {
+            "x": [
+                0,
+                0.42
+            ],
+            "y": [
+                0,
+                0.51
+            ],
+            "scale": 0.93,
+            "angle": 10
+        }
+    },
+    "shen_guojia": {
+        "倚星折月": {
+            "x": [
+                0,
+                0.01
+            ],
+            "y": [
+                0,
+                0.39
+            ],
+            "scale": 0.5,
+            "angle": 0
+        }
+    },
+    "sunxiu": {
+        "君临即位": {
+            "x": [
+                0,
+                0.51
+            ],
+            "y": [
+                0,
+                0.47
+            ],
+            "scale": 0.79,
+            "angle": 0
+        }
+    },
+    "xin_sunluban": {
+        "战场荣耀": {
+            "x": [
+                0,
+                0.4
+            ],
+            "y": [
+                0,
+                0.41
+            ],
+            "scale": 1.1,
+            "angle": 0
+        }
+    },
+    "ol_nanhualaoxian": {
+        "着墨山河": {
+            "gongji": {
+                "x": [
+                    0,
+                    0.77
+                ],
+                "y": [
+                    0,
+                    0.39
+                ],
+                "scale": 0.92,
+                "angle": 0
+            }
         }
     }
 }

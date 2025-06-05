@@ -111,6 +111,7 @@ class PlayerAnimation {
         if (data.action === 'GongJi') actionParams = player.gongjiAction
         else if (data.action === 'chukuang') actionParams = player.chuchangAction
         else if (data.action === 'TeShu') actionParams = player.teshuAction
+        else if (data.action === 'hudong') actionParams = player.hudongAction
         else actionParams = player[data.action + 'Action']
         if (!actionParams) return
 
@@ -150,6 +151,10 @@ class PlayerAnimation {
             delayTime = 300 // 减少回框延迟
         } else if (data.action === 'TeShu') {
             // 特殊动画至少播放1.5秒，确保动画完整播放
+            showTime = Math.max(showTime, 1500)
+            delayTime = 300 // 减少回框延迟
+        } else if (data.action === 'hudong') {
+            // 互动动画至少播放1.5秒，确保动画完整播放
             showTime = Math.max(showTime, 1500)
             delayTime = 300 // 减少回框延迟
         }
@@ -594,6 +599,10 @@ class PlayerAnimation {
         // 定义为十周年的开局出场
         let chuchang = player.chuchang
         let chuchangType = typeof chuchang
+        
+        // 添加互动出框参数处理
+        let hudong = player.hudong
+        let hudongType = typeof hudong
 
         // 如果填写了出场参数, 基本确认是十周年的真动皮
         if (chuchang) {
@@ -602,6 +611,16 @@ class PlayerAnimation {
                 if (!chuchang.action) {chuchang.action = 'play'}
                 if (!chuchang.scale) {chuchang.scale = player.scale}
                 player.chuchangAction = chuchang
+            }
+        }
+        
+        // 处理互动出框参数
+        if (hudong) {
+            if (hudongType === 'object') {
+                if (!hudong.name) {hudong.name = player.name}
+                if (!hudong.action) {hudong.action = 'play'}
+                if (!hudong.scale) {hudong.scale = player.scale}
+                player.hudongAction = hudong
             }
         }
 
@@ -798,6 +817,15 @@ function setPos(apnode, data) {
             apnode.y = data.player.y + data.player.height * 0.8
             return setShiZhouNianGongJiPos(apnode, data)
             // 出场是原地出场
+        } else if (data.action === 'hudong') {
+            // 如果设置了互动的位置, 那么不使用默认的位置
+            if (apnode.player.hudongAction.x && apnode.player.hudongAction.y) {
+                return
+            }
+            // 默认互动位置略微偏右上方
+            apnode.x = data.player.x + data.player.width / 3
+            apnode.y = data.player.y + data.player.height * 0.7
+            return setShiZhouNianGongJiPos(apnode, data)
         } else {
             return
         }
@@ -819,6 +847,14 @@ function setPos(apnode, data) {
             if (apnode.player.shizhounian) {
                 return setShiZhouNianGongJiPos(apnode, data)
             }
+        } else if (data.action === 'hudong') {
+            if (apnode.player.shizhounian) {
+                return setShiZhouNianGongJiPos(apnode, data)
+            }
+            // 非玩家互动位置特殊处理
+            apnode.x = data.player.x + data.player.width / 3;
+            apnode.y = data.player.y + data.player.height / 2;
+            return;
         }
         apnode.x = data.direction.x;
         apnode.y = data.direction.y;
@@ -879,6 +915,7 @@ function completePlayerParams(avatarPlayer, action) {
         if (action === 'GongJi') actionParams = avatarPlayer.gongjiAction
         else if (action === 'TeShu') actionParams = avatarPlayer.teshuAction
         else if (action === 'chuchang') actionParams = avatarPlayer.chuchangAction
+        else if (action === 'hudong') actionParams = avatarPlayer.hudongAction
         else actionParams = avatarPlayer[action + 'Action']  // 这个写法是可以扩展随意任意想要出框的action, 默认可以出框的只有gongji,teshu,chuchang
 
         if (actionParams && actionParams.name === daijiName) {
@@ -943,8 +980,8 @@ function completePlayerParams(avatarPlayer, action) {
                     }
                 }
                 avatarPlayer.actionState[action] = false
-            }  else if (action === 'chuchang') {
-                // 修复：为version提供默认值，避免undefined错误
+            } else if (action === 'hudong') {
+                // 处理互动出框动作
                 let version = actionParams.version || (avatarPlayer && avatarPlayer.version) || '3.6';
                 let results = playerAnimation.getAnni(avatarPlayer, version).getSpineActions(daijiName, actionParams.toLoadActions)
                 if (results && results.length > 0) {
@@ -953,18 +990,18 @@ function completePlayerParams(avatarPlayer, action) {
                             avatarPlayer.actionState[action] = {
                                 action: r.name,
                                 duration: r.duration,
-                                // 出场动画确保至少有2秒的显示时间，让动画播放完整
-                                showTime: actionParams.showTime || Math.max(r.duration, 2)
+                                // 互动动画确保至少有1.5秒的显示时间
+                                showTime: actionParams.showTime || Math.max(r.duration, 1.5)
                             }
                             return true
                         }
                     }
-                    // 使用第一个当作chuchang
+                    // 使用第一个当作hudong动作
                     avatarPlayer.actionState[action] = {
                         action: results[0].name,
                         duration: results[0].duration,
-                        // 出场动画确保至少有2秒的显示时间，让动画播放完整
-                        showTime: actionParams.showTime || Math.max(results[0].duration, 2)
+                        // 互动动画确保至少有1.5秒的显示时间
+                        showTime: actionParams.showTime || Math.max(results[0].duration, 1.5)
                     }
                     return true
                 }
@@ -1058,6 +1095,14 @@ function isChuKuang(data) {
             }
             playerState['time'] = currentTime
         }
+        // 针对互动动画设置合适的冷却时间
+        else if (data.action === 'hudong') {
+            // 互动动画的冷却时间设为1800ms，确保动画播放完整（1.5秒播放时间+0.3秒缓冲）
+            if (playerState.time && currentTime - playerState.time <= 1800) {
+                return
+            }
+            playerState['time'] = currentTime
+        }
         else {
             console.log(playerState, currentTime, currentTime - playerState.time < 40)
             if (playerState.action != null && playerState.action !== data.action) {
@@ -1103,6 +1148,7 @@ function isChuKuang(data) {
         if (data.action === 'GongJi') actionParams = player.gongjiAction
         else if (data.action === 'chukuang') actionParams = player.chuchangAction
         else if (data.action === 'TeShu') actionParams = player.teshuAction
+        else if (data.action === 'hudong') actionParams = player.hudongAction
         else actionParams = player[data.action + 'Action']
         if (extraParams) {
             if (actionParams) {
@@ -1141,6 +1187,7 @@ function isChuKuang(data) {
         if (data.action === 'GongJi') actionParams = primaryPlayer.gongjiAction
         else if (data.action === 'chukuang') actionParams = primaryPlayer.chuchangAction
         else if (data.action === 'TeShu') actionParams = primaryPlayer.teshuAction
+        else if (data.action === 'hudong') actionParams = primaryPlayer.hudongAction
         else actionParams = primaryPlayer[data.action + 'Action']
         if (extraParams) {
             if (actionParams) {
@@ -1180,6 +1227,7 @@ function isChuKuang(data) {
         if (data.action === 'GongJi') actionParams = deputyPlayer.gongjiAction
         else if (data.action === 'chukuang') actionParams = deputyPlayer.chuchangAction
         else if (data.action === 'TeShu') actionParams = deputyPlayer.teshuAction
+        else if (data.action === 'hudong') actionParams = deputyPlayer.hudongAction
         else actionParams = deputyPlayer[data.action + 'Action']
         if (extraParams) {
             if (actionParams) {
@@ -1241,6 +1289,8 @@ function adjust(data) {
         actionParams = player.chuchangAction
     } else if (data.action === 'TeShu') {
         actionParams = player.teshuAction
+    } else if (data.action === 'hudong') {
+        actionParams = player.hudongAction
     } else if (data.action) {
         actionParams = player[data.action + 'Action']
     } else {
@@ -1308,19 +1358,68 @@ function playEffect(data) {
         position.parent = null
     }
 
-    if (dynamic.hasSpine(sprite.name)) {
-        dynamic.playSpine(sprite, position)
-    } else {
-        dynamic.loadSpine(sprite.name, sprite.json ? 'json': 'skel', () => {
-            dynamic.playSpine(sprite, position)
-        }, () => {
-
-        })
+    // 为循环特效添加安全机制：如果设置了loop但没有设置maxTime，则默认设置5秒的最大播放时间
+    if (sprite.loop && !sprite.maxTime && !sprite.maxLoops) {
+        sprite.maxTime = 5000; // 默认最多播放5秒
+        console.warn('检测到循环特效未设置最大时间，自动设置为5秒：', sprite.name);
     }
 
+    // 播放特效的函数
+    let doPlayEffect = () => {
+        let playNode = dynamic.playSpine(sprite, position);
+        
+        // 如果是循环特效，设置自动清除
+        if (sprite.loop && playNode) {
+            if (sprite.maxTime) {
+                // 按时间清除
+                setTimeout(() => {
+                    dynamic.stopSpine(sprite);
+                    console.log('自动清除循环特效（时间限制）：', sprite.name);
+                }, sprite.maxTime);
+            } else if (sprite.maxLoops) {
+                // 按循环次数清除（需要监听动画事件，这里简化处理）
+                let estimatedTime = (sprite.maxLoops * 2000); // 假设每次循环2秒
+                setTimeout(() => {
+                    dynamic.stopSpine(sprite);
+                    console.log('自动清除循环特效（次数限制）：', sprite.name);
+                }, estimatedTime);
+            }
+        }
+    };
 
+    if (dynamic.hasSpine(sprite.name)) {
+        doPlayEffect();
+    } else {
+        dynamic.loadSpine(sprite.name, sprite.json ? 'json': 'skel', () => {
+            doPlayEffect();
+        }, () => {
+            console.error('加载特效失败：', sprite.name);
+        })
+    }
 }
 
+// 清除特效
+function clearEffect(data) {
+    let sprite = data.sprite
+    if (typeof sprite === 'string') {
+        sprite = {name: sprite}
+    }
+    let v = sprite.version || '3.6'
+    let dynamic = playerAnimation.getAnni(null, v)
+    dynamic.stopSpine(sprite)
+}
+
+// 清除所有特效
+function clearAllEffects() {
+    // 清除普通动画管理器中的所有特效
+    if (playerAnimation && playerAnimation.animationManager) {
+        playerAnimation.animationManager.stopSpineAll()
+    }
+    // 清除十周年UI动画管理器中的所有特效
+    if (decadeUIAni) {
+        decadeUIAni.stopSpineAll()
+    }
+}
 
 /** @type {AnimationManager} */
 let decadeUIAni
@@ -1546,6 +1645,12 @@ onmessage = function (e) {
             break
         case 'PLAY_EFFECT':
             playEffect(data)
+            break
+        case 'CLEAR_EFFECT':
+            clearEffect(data)
+            break
+        case 'CLEAR_ALL_EFFECTS':
+            clearAllEffects()
             break
         case 'CREATE_DECADE_ANI':
             createDecadeAni(data)

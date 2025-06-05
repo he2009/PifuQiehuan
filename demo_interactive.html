@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动出框播放系统 - 演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #a8e6cf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .demo-area {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 30px;
+            height: calc(100vh - 200px);
+        }
+
+        .game-simulation {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .player-card:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .player-card.active {
+            border-color: #4f46e5;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .card-deck {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.sha { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .card.shan { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .card.peach { background: linear-gradient(135deg, #ffa726, #fb8c00); }
+        .card.skill { background: linear-gradient(135deg, #ab47bc, #8e24aa); }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .stats-panel h3 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+
+        .instructions h4 {
+            margin-bottom: 10px;
+            color: #a8e6cf;
+        }
+
+        .instructions ul {
+            list-style: none;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .instructions li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #4f46e5;
+        }
+
+        .effect-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .flash-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            opacity: 0;
+            animation: flash 0.3s ease-out;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #4f46e5;
+            border-radius: 50%;
+            animation: particle 1.5s ease-out forwards;
+        }
+
+        @keyframes particle {
+            0% {
+                transform: scale(0) translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        .log-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            opacity: 0.8;
+            border-left: 3px solid #4f46e5;
+            padding-left: 10px;
+        }
+
+        .log-item.card-event {
+            border-left-color: #ff6b6b;
+        }
+
+        .log-item.response {
+            border-left-color: #4ecdc4;
+        }
+
+        .control-panel {
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .demo-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .instructions {
+                position: relative;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 互动出框播放系统</h1>
+            <p>体验智能的卡牌响应和手势控制功能</p>
+        </div>
+
+        <div class="demo-area">
+            <div class="game-simulation">
+                <div class="instructions">
+                    <h4>💡 操作指南</h4>
+                    <ul>
+                        <li>点击卡牌触发响应</li>
+                        <li>单击 → 攻击动画</li>
+                        <li>双击 → 特殊动画</li>
+                        <li>长按 → 互动动画</li>
+                        <li>滑动 → 出场动画</li>
+                        <li>按键1234快速触发</li>
+                    </ul>
+                </div>
+
+                <div class="player-area">
+                    <div class="player-card" data-player="player1">
+                        <div class="avatar">🦸</div>
+                        <h3>玩家1</h3>
+                        <div class="card-deck">
+                            <div class="card sha" data-card="sha" data-type="attack">杀</div>
+                            <div class="card shan" data-card="shan" data-type="dodge">闪</div>
+                            <div class="card peach" data-card="peach" data-type="heal">桃</div>
+                        </div>
+                    </div>
+
+                    <div class="player-card" data-player="player2">
+                        <div class="avatar">🧙</div>
+                        <h3>玩家2 (您)</h3>
+                        <div class="card-deck">
+                            <div class="card skill" data-card="skill" data-type="skill">技能</div>
+                            <div class="card sha" data-card="sha" data-type="attack">杀</div>
+                            <div class="card peach" data-card="peach" data-type="heal">桃</div>
+                        </div>
+                    </div>
+
+                    <div class="player-card" data-player="player3">
+                        <div class="avatar">🏹</div>
+                        <h3>玩家3</h3>
+                        <div class="card-deck">
+                            <div class="card shan" data-card="shan" data-type="dodge">闪</div>
+                            <div class="card skill" data-card="skill" data-type="skill">技能</div>
+                            <div class="card sha" data-card="sha" data-type="attack">杀</div>
+                        </div>
+                    </div>
+
+                    <div class="player-card" data-player="player4">
+                        <div class="avatar">🛡️</div>
+                        <h3>玩家4</h3>
+                        <div class="card-deck">
+                            <div class="card peach" data-card="peach" data-type="heal">桃</div>
+                            <div class="card shan" data-card="shan" data-type="dodge">闪</div>
+                            <div class="card skill" data-card="skill" data-type="skill">技能</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-panel">
+                    <h3>📊 游戏统计</h3>
+                    <div class="stat-item">
+                        <span>卡牌使用次数:</span>
+                        <span id="card-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>响应触发次数:</span>
+                        <span id="response-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>连锁反应次数:</span>
+                        <span id="chain-count">0</span>
+                    </div>
+                </div>
+
+                <div class="log-panel">
+                    <h3>📝 事件日志</h3>
+                    <div id="event-log"></div>
+                </div>
+
+                <div class="effect-overlay" id="effect-overlay"></div>
+            </div>
+
+            <div class="control-panel">
+                <!-- 这里将加载互动控制面板 -->
+                <iframe src="component/interactive-chukuang.html" 
+                        width="320" height="100%" 
+                        style="border: none; border-radius: 20px;">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 演示系统状态
+        let gameStats = {
+            cardCount: 0,
+            responseCount: 0,
+            chainCount: 0
+        };
+
+        // 初始化演示
+        document.addEventListener('DOMContentLoaded', function() {
+            initDemo();
+            bindEvents();
+        });
+
+        function initDemo() {
+            console.log('🎮 互动出框播放演示已启动');
+            addLog('系统初始化完成', 'system');
+            
+            // 模拟一些初始事件
+            setTimeout(() => {
+                addLog('准备就绪，可以开始体验功能', 'system');
+            }, 1000);
+        }
+
+        function bindEvents() {
+            // 绑定卡牌点击事件
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleCardClick(this);
+                });
+            });
+
+            // 绑定玩家区域事件
+            document.querySelectorAll('.player-card').forEach(playerCard => {
+                playerCard.addEventListener('click', function() {
+                    simulatePlayerAction(this);
+                });
+            });
+
+            // 监听来自iframe的消息
+            window.addEventListener('message', function(e) {
+                if (e.data.type === 'interactive-chukuang') {
+                    handleInteractiveEvent(e.data.data);
+                }
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                const keyActions = {
+                    '1': 'GongJi',
+                    '2': 'TeShu',
+                    '3': 'chuchang', 
+                    '4': 'hudong'
+                };
+
+                if (keyActions[e.key]) {
+                    e.preventDefault();
+                    simulateDirectAction(keyActions[e.key]);
+                }
+            });
+        }
+
+        function handleCardClick(cardElement) {
+            const cardType = cardElement.dataset.card;
+            const player = cardElement.closest('.player-card').dataset.player;
+            
+            // 播放卡牌使用动画
+            cardElement.style.transform = 'scale(1.2) rotate(5deg)';
+            setTimeout(() => {
+                cardElement.style.transform = '';
+            }, 300);
+
+            // 记录卡牌使用
+            gameStats.cardCount++;
+            updateStats();
+
+            // 添加事件日志
+            addLog(`${player} 使用了 ${cardElement.textContent}`, 'card-event');
+
+            // 模拟卡牌响应
+            setTimeout(() => {
+                simulateCardResponse(cardType, player);
+            }, 500);
+
+            // 添加特效
+            addEffect('flash');
+            
+            // 可能触发连锁反应
+            if (Math.random() < 0.3) {
+                setTimeout(() => {
+                    simulateChainReaction();
+                }, 1500);
+            }
+        }
+
+        function simulateCardResponse(cardType, fromPlayer) {
+            const responseActions = {
+                'sha': ['GongJi', 'TeShu'],
+                'shan': ['hudong', 'TeShu'],
+                'peach': ['hudong', 'chuchang'],
+                'skill': ['TeShu', 'hudong']
+            };
+
+            const actions = responseActions[cardType] || ['GongJi'];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            
+            gameStats.responseCount++;
+            updateStats();
+
+            addLog(`响应 ${fromPlayer} 的卡牌，触发 ${getActionName(action)}`, 'response');
+            
+            // 高亮响应的玩家
+            highlightPlayer('player2');
+        }
+
+        function simulateChainReaction() {
+            gameStats.chainCount++;
+            updateStats();
+            
+            addLog('触发连锁反应！', 'response');
+            addEffect('particles');
+            
+            // 多个玩家依次响应
+            ['player1', 'player3', 'player4'].forEach((player, index) => {
+                setTimeout(() => {
+                    highlightPlayer(player);
+                    addLog(`${player} 加入连锁反应`, 'response');
+                }, index * 800);
+            });
+        }
+
+        function simulatePlayerAction(playerCard) {
+            const player = playerCard.dataset.player;
+            addLog(`${player} 被选中`, 'system');
+            highlightPlayer(player);
+        }
+
+        function simulateDirectAction(action) {
+            addLog(`直接触发 ${getActionName(action)}`, 'response');
+            addEffect('glow');
+            highlightPlayer('player2');
+        }
+
+        function handleInteractiveEvent(data) {
+            console.log('收到互动事件:', data);
+            addLog(`互动系统: ${data.action} (来源: ${data.source})`, 'system');
+        }
+
+        function addEffect(type) {
+            const overlay = document.getElementById('effect-overlay');
+            
+            if (type === 'flash') {
+                const flash = document.createElement('div');
+                flash.className = 'flash-effect';
+                overlay.appendChild(flash);
+                
+                setTimeout(() => {
+                    overlay.removeChild(flash);
+                }, 300);
+            }
+            
+            if (type === 'particles') {
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        const particle = document.createElement('div');
+                        particle.className = 'particle';
+                        particle.style.left = Math.random() * 100 + '%';
+                        particle.style.top = Math.random() * 100 + '%';
+                        overlay.appendChild(particle);
+                        
+                        setTimeout(() => {
+                            if (overlay.contains(particle)) {
+                                overlay.removeChild(particle);
+                            }
+                        }, 1500);
+                    }, i * 50);
+                }
+            }
+            
+            if (type === 'glow') {
+                overlay.style.boxShadow = '0 0 50px rgba(79, 70, 229, 0.8)';
+                setTimeout(() => {
+                    overlay.style.boxShadow = '';
+                }, 800);
+            }
+        }
+
+        function highlightPlayer(playerId) {
+            // 移除所有高亮
+            document.querySelectorAll('.player-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // 高亮指定玩家
+            const playerCard = document.querySelector(`[data-player="${playerId}"]`);
+            if (playerCard) {
+                playerCard.classList.add('active');
+                setTimeout(() => {
+                    playerCard.classList.remove('active');
+                }, 2000);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('card-count').textContent = gameStats.cardCount;
+            document.getElementById('response-count').textContent = gameStats.responseCount;
+            document.getElementById('chain-count').textContent = gameStats.chainCount;
+        }
+
+        function addLog(message, type = 'system') {
+            const logContainer = document.getElementById('event-log');
+            const logItem = document.createElement('div');
+            logItem.className = `log-item ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            logItem.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            logContainer.appendChild(logItem);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // 限制日志数量
+            const logItems = logContainer.querySelectorAll('.log-item');
+            if (logItems.length > 50) {
+                logContainer.removeChild(logItems[0]);
+            }
+        }
+
+        function getActionName(action) {
+            const actionNames = {
+                'GongJi': '攻击动画',
+                'TeShu': '特殊动画',
+                'chuchang': '出场动画',
+                'hudong': '互动动画'
+            };
+            return actionNames[action] || action;
+        }
+
+        // 自动演示模式
+        function startAutoDemo() {
+            const cards = document.querySelectorAll('.card');
+            let index = 0;
+            
+            const autoClick = () => {
+                if (cards[index]) {
+                    cards[index].click();
+                    index = (index + 1) % cards.length;
+                }
+                setTimeout(autoClick, 3000 + Math.random() * 2000);
+            };
+            
+            setTimeout(autoClick, 2000);
+        }
+
+        // 启动自动演示
+        setTimeout(startAutoDemo, 5000);
+    </script>
+</body>
+</html> 
