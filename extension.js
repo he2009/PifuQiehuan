@@ -1166,7 +1166,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                 }
                             }
 
-                            // 改变势力
+                             // 改变势力
                             lib.skill._pfqh_check_changeGroup = {
                                 trigger: {
                                     global: 'gameStart'
@@ -1175,7 +1175,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                 charlotte: true,
                                 forced: true,
                                 priority: 2022,
-                                filter(event,trigger,player) {
+                                filter(event,player) {
                                     return player.dynamic;
                                 },
                                 content: function() {
@@ -1188,7 +1188,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                       'qun': ['qun']
                                     };
                                     function getFirstGroupType(characterName) {
-                                      var group = get.groupnature2(lib.character[characterName]);
+                                      var group = get.groupnature(lib.character[characterName]);
                                       for (var type in groupMap) {
                                         if (groupMap[type].some(function(keyword) { return group.startsWith(keyword); })) {
                                           return type;
@@ -1253,12 +1253,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                 }
                             };
 
-                             // 千幻聆音势力换肤
+                            // 千幻聆音势力换肤
                             lib.skill._qhlyChangeGroupSkin = {
                                 trigger: {
                                     global: 'gameStart' 
                                 },
-                                filter: function (event,trigger,player) {
+                                filter: function (event,player) {
                                     return lib.qhly_skinChange[game.qhly_getRealName(player.name1)] || lib.qhly_skinChange[game.qhly_getRealName(player.name2)];
                                 },
                                 direct: true,
@@ -1272,7 +1272,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                         'qun': ['qun']
                                     };
                                     function getFirstGroupType(characterName) {
-                                        var group = get.groupnature(get.bordergroup(characterName));
+                                        var group = get.groupnature(lib.character[characterName]);
                                         for (var type in groupMap) {
                                             if (groupMap[type].some(function(keyword) { return group.startsWith(keyword); })) {
                                                 return type;
