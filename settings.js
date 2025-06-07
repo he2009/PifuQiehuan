@@ -11,4 +11,4 @@ let isAttackFlipX = false  // 攻击出框是否翻转. 当在屏幕左边往右
 
 let showTimeBefore = 100  // 手杀位移提前多少秒消失  ---> 位移到一半后会提前回框 单位毫秒
 
-let enableShaAndShanInteraction = false  // 启用杀闪互动效果，当别人出杀我出闪时播放特殊动画
+let showTopArc = true  // 是否显示顶部圆弧，默认显示

@@ -303,80 +303,14 @@ box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255,
 
 /* 预览样式 */
 .pfqh-preview-background {
-    z-index: 9999;
+    z-index: 3000;
     display: block;
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     left: 0;
     top: 0;
-    background-color: rgba(0, 0, 0, 0.9);
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
 }
 
-/* 文件列表相关样式 */
-.nd-detail-filelist__list.bg {
-    min-height: 700px !important;
-    width: 117% !important;
-    margin-left: -2.7%!important;
-    left: -6%!important;
-    background-color: #444 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* 分割线样式 */
-.nd-detail-filelist__name {
-    width: 100% !important;
-    margin-left: 0 !important;
-    left: 0 !important;
-    padding-left: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* 文件浏览区整体布局 */
-.nd-detail-filelist {
-    width: 100% !important;
-    margin-left: 0 !important;
-}
-
-.nd-detail-filelist__contain {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 0 3% !important;
-}
-
-/* 调整文件夹列表容器 */
-.filesHeight {
-    min-height: 700px !important;
-    margin-left: 3% !important; /* 调整左边距 */
-    width: 45% !important;
-}
-
-/* 搜索框容器样式 */
-.folder-search-container {
-    width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* 调整文件和文件夹列表的宽度 */
-#pfqhFoldList, #pfqhFilesList {
-    min-height: 700px !important;
-    width: 95% !important; /* 增加宽度 */
-}
-
-/* 文件列表标题区域 */
-.nd-detail-filelist__title {
-    width: 100% !important;
-    margin-left: 0 !important;
-    left: 0 !important;
-    padding-left: 0 !important;
-    box-sizing: border-box !important;
-}
 
 /* 已删除l2d的相关样式 */
 
@@ -887,13 +821,4 @@ box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255,
 
 .editDynamic.dragging .skin-drag-handle {
     pointer-events: auto;
-}
-
-/* 水平分割线样式 */
-.nd-detail-filelist > hr,
-.nd-detail > hr,
-hr {
-    width: 100% !important;
-    margin-left: 0 !important;
-    box-sizing: border-box !important;
 }

@@ -255,36 +255,21 @@ var newDuilib;
 			}
 			
 			var domX, domY, domDefaultX, domDefaultY;
-			var dpr = e.dpr / (useNewDpr ? parseFloat(window.getComputedStyle(document.body).zoom) : 1);
+			var dpr = e.dpr;
 			var referSize = { width: e.canvas.width, height: e.canvas.height };
 			var domNode = this.referNode instanceof HTMLElement ? this.referNode : undefined;
 			if (domNode) {
 				if (this.referFollow || !this.referBounds) {
 					var rect = domNode.getBoundingClientRect();
-					if (useNewDpr) {
-						var parentElements = [];
-						var ele = domNode,
-							zoom = 1;
-						while (ele !== null) {
-							if (ele === document.body) break;
-							parentElements.push(ele);
-							ele = ele.parentElement;
-						}
-						for (var element of parentElements.reverse()) {
-							zoom *= parseFloat(window.getComputedStyle(element).zoom);
-						}
-						var {
-							x,
-							y,
-							width,
-							height
-						} = rect;
-						rect = new DOMRect(x / zoom, y / zoom, width / zoom, height / zoom);
+					let y
+					if (window.decadeUI) {
+						y = decadeUI.get.bodySize().height - rect.bottom
+					} else {
+						y = domNode.bodySize.bodyHeight - rect.bottom
 					}
 					this.referBounds = {
 						x: rect.left,
-						y: decadeUI.get.bodySize().height * (useNewDpr ? window.documentZoom : 1) -
-							rect.bottom,
+						y: y,
 						width: rect.width,
 						height: rect.height,
 					};
@@ -360,8 +345,7 @@ var newDuilib;
 			} else if (renderScaleX && renderScaleY) {
 				renderScale *= Math.min(renderScaleX, renderScaleY);
 			} else {
-				renderScale *= dpr * (useNewDpr ? parseFloat(window.getComputedStyle(document.body)
-					.zoom) : 1);
+				renderScale *= dpr;
 			}
 			
 			if (renderScale != 1) {
@@ -1334,77 +1318,5 @@ var newDuilib;
 		
 		return DynamicPlayer;
 	})();
-
-	//鹿鹿修改 修复webview高版本特效错位（搬运自诗笺）
-	//赞美诗诗喵
-	var window = self;
-	function caesarCipher(str, shift) {
-		return str
-			.split("")
-			.map(char => {
-				if (char >= "A" && char <= "Z") {
-					return String.fromCharCode(((char.charCodeAt(0) - 65 + shift) % 26) + 65);
-				} else if (char >= "a" && char <= "z") {
-					return String.fromCharCode(((char.charCodeAt(0) - 97 + shift) % 26) + 97);
-				} else {
-					return char;
-				}
-			})
-			.join("");
-	}
-
-	function getInfo() {
-		if (typeof window.process?.versions == "object") {
-			if (window.process.versions.chrome) {
-				return [
-					"chrome",
-					...window.process.versions.chrome
-					.split(".")
-					.slice(0, 3)
-					.map(item => parseInt(item)),
-				];
-			}
-		}
-
-		if (typeof navigator.userAgentData != "undefined") {
-			var userAgentData = navigator.userAgentData;
-			if (userAgentData.brands && userAgentData.brands.length) {
-				var brand = userAgentData.brands.find(({
-					brand
-				}) => {
-					var str = brand.toLowerCase();
-					return str.includes("chrome") || str.includes("chromium");
-				});
-
-				return brand ? ["chrome", parseInt(brand.version), 0, 0] : ["other", NaN, NaN, NaN];
-			}
-		}
-
-		var regex = /(firefox|chrome|safari)\/(\d+(?:\.\d+)+)/;
-		var result,
-			userAgent = navigator.userAgent;
-		if (!(result = userAgent.match(regex))) return ["other", NaN, NaN, NaN];
-
-		if (result[1] !== "safari") {
-			var [major, minor, patch] = result[2].split(".");
-			return [result[1], parseInt(major), parseInt(minor), parseInt(patch)];
-		}
-
-		if (/macintosh/.test(userAgent)) {
-			result = userAgent.match(/version\/(\d+(?:\.\d+)+).*safari/);
-			if (!result) return ["other", NaN, NaN, NaN];
-		} else {
-			var safariRegex = /(?:iphone|ipad); cpu (?:iphone )?os (\d+(?:_\d+)+)/;
-			result = userAgent.match(safariRegex);
-			if (!result) return ["other", NaN, NaN, NaN];
-		}
-		var [major, minor, patch] = result[1].split(".");
-		return ["safari", parseInt(major), parseInt(minor), parseInt(patch)];
-	}
-
-	var info = getInfo();
-	var useNewDpr = (info[0] == (caesarCipher("Fkurplxp", -3).slice(0, Math.floor(114514 / Math.pow(10, 2)) % 10) +
-		"e").toLowerCase() && info[1] >= 114514 - 114386) || (info[0] == ((caesarCipher("Iluh", -3) + "." +
-			caesarCipher("zlq", -3)).slice(0, Math.floor(114514 / Math.pow(10, 0)) % 10) + "fox")
-	.toLowerCase() && info[1] >= 20 + 6 + 49 + 51);	
+	
 })(newDuilib || (newDuilib = {}));
