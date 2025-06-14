@@ -635,6 +635,129 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                 }
                             }
 
+                            // 不知道怎么合并, 在回合开始和回合结束, 检测Player的group变化
+                            lib.skill._fix_phase_yh = {
+                                trigger: {
+                                    player: ['phaseBegin', 'phaseEnd']
+                                },
+                                forced: true,
+                                filter: function (event, player) {
+                                    return !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                                },
+                                content: function () {
+                                    skinSwitch.skinSwitchCheckYH(player)
+                                }
+                            }
+
+                            // 回合计数变身触发
+                            lib.skill._pfqh_check_roundCount = {
+                                trigger: {
+                                    player: "phaseBegin",
+                                },
+                                silent: true,
+                                charlotte: true,
+                                forced: true,
+                                priority: 2022,
+                                filter(event, player) {
+                                    return player.dynamic && player.isAlive();
+                                },
+                                content: function () {
+                                    // 获取与回合计数相关的特殊效果
+                                    let res = skinSwitch.dynamic.getSpecial(player, 'roundCount');
+                                    if (res && res.length > 0) {
+                                        res.forEach(r => {
+                                            const { avatar, special, effs, isPrimary } = r;
+                                            // 检查是否达到回合数触发条件
+                                            if (effs && effs.rounds && player.phaseNumber === effs.rounds) {
+                                                let audio = null;
+                                                
+                                                // 处理变身
+                                                let tryPlayTransform = () => {
+                                                    let transform = effs.transform;
+                                                    if (transform) {
+                                                        let newSkin = null;
+                                                        if (Array.isArray(transform)) {
+                                                            // 多个变身选项
+                                                            for (let i = 0; i < transform.length; i++) {
+                                                                newSkin = special[transform[i]];
+                                                                if (newSkin) break;
+                                                            }
+                                                        } else {
+                                                            // 单个变身选项
+                                                            newSkin = special[transform];
+                                                        }
+                                                        
+                                                        if (newSkin) {
+                                                            if (newSkin.audio) audio = newSkin.audio;
+                                                            
+                                                            // 如果有name属性，进行变身
+                                                            if (newSkin.name) {
+                                                                skinSwitch.dynamic.bianshen(player, newSkin.name, isPrimary);
+                                                                
+                                                                // 播放变身特效
+                                                                if (newSkin.effect) {
+                                                                    setTimeout(() => {
+                                                                        if (typeof newSkin.effect === "string") {
+                                                                            skinSwitch.chukuangWorkerApi.playEffect({
+                                                                                name: `../../../皮肤切换/effects/${newSkin.effect}/${newSkin.effect}`,
+                                                                                version: "4.0"
+                                                                            });
+                                                                        }
+                                                                    }, 300);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                };
+                                                
+                                                // 处理特效播放
+                                                let tryPlayEffect = () => {
+                                                    let effectPlay = effs.play;
+                                                    if (effectPlay) {
+                                                        let eff = special[effectPlay];
+                                                        if (eff) {
+                                                            if (!eff.x) eff.x = [0, 0.5];
+                                                            if (!eff.y) eff.y = [0, 0.5];
+                                                            setTimeout(() => {
+                                                                skinSwitch.chukuangWorkerApi.playEffect(eff);
+                                                            }, (eff.delay || 0) * 1000);
+                                                            if (!audio) audio = eff.audio;
+                                                        }
+                                                    }
+                                                };
+                                                
+                                                tryPlayTransform();
+                                                tryPlayEffect();
+                                                
+                                                // 播放音效
+                                                if (!audio) audio = effs.audio;
+                                                if (audio) {
+                                                    game.playAudio('..', skinSwitch.dcdPath, 'assets/dynamic', audio);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            };
+
+                            lib.skill._check_die_yh = {
+                                trigger: {
+                                    player: "dieBefore",
+                                },
+                                silent: true,
+                                charlotte: true,
+                                forced: true,
+                                filter(event, player) {
+                                    return player.dynamic
+                                },
+                                content: function () {
+                                    let skinYh = player.getElementsByClassName("skinYh");
+                                    if (skinYh.length > 0) {
+                                        player.removeChild(skinYh[0]);
+                                    }
+                                }
+                            }
+
                             // 添加游戏开始时重新应用保存的动皮参数的技能
                             lib.skill._pfqh_reapply_saved_params = {
                                 trigger: {
@@ -719,6 +842,97 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                     skinSwitch.skinSwitchCheckYH(player)
                                 }
                             }
+
+                            // 回合计数变身触发
+                            lib.skill._pfqh_check_roundCount = {
+                                trigger: {
+                                    player: "phaseBegin",
+                                },
+                                silent: true,
+                                charlotte: true,
+                                forced: true,
+                                priority: 2022,
+                                filter(event, player) {
+                                    return player.dynamic && player.isAlive();
+                                },
+                                content: function () {
+                                    // 获取与回合计数相关的特殊效果
+                                    let res = skinSwitch.dynamic.getSpecial(player, 'roundCount');
+                                    if (res && res.length > 0) {
+                                        res.forEach(r => {
+                                            const { avatar, special, effs, isPrimary } = r;
+                                            // 检查是否达到回合数触发条件
+                                            if (effs && effs.rounds && player.phaseNumber === effs.rounds) {
+                                                let audio = null;
+                                                
+                                                // 处理变身
+                                                let tryPlayTransform = () => {
+                                                    let transform = effs.transform;
+                                                    if (transform) {
+                                                        let newSkin = null;
+                                                        if (Array.isArray(transform)) {
+                                                            // 多个变身选项
+                                                            for (let i = 0; i < transform.length; i++) {
+                                                                newSkin = special[transform[i]];
+                                                                if (newSkin) break;
+                                                            }
+                                                        } else {
+                                                            // 单个变身选项
+                                                            newSkin = special[transform];
+                                                        }
+                                                        
+                                                        if (newSkin) {
+                                                            if (newSkin.audio) audio = newSkin.audio;
+                                                            
+                                                            // 如果有name属性，进行变身
+                                                            if (newSkin.name) {
+                                                                skinSwitch.dynamic.bianshen(player, newSkin.name, isPrimary);
+                                                                
+                                                                // 播放变身特效
+                                                                if (newSkin.effect) {
+                                                                    setTimeout(() => {
+                                                                        if (typeof newSkin.effect === "string") {
+                                                                            skinSwitch.chukuangWorkerApi.playEffect({
+                                                                                name: `../../../皮肤切换/effects/${newSkin.effect}/${newSkin.effect}`,
+                                                                                version: "4.0"
+                                                                            });
+                                                                        }
+                                                                    }, 300);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                };
+                                                
+                                                // 处理特效播放
+                                                let tryPlayEffect = () => {
+                                                    let effectPlay = effs.play;
+                                                    if (effectPlay) {
+                                                        let eff = special[effectPlay];
+                                                        if (eff) {
+                                                            if (!eff.x) eff.x = [0, 0.5];
+                                                            if (!eff.y) eff.y = [0, 0.5];
+                                                            setTimeout(() => {
+                                                                skinSwitch.chukuangWorkerApi.playEffect(eff);
+                                                            }, (eff.delay || 0) * 1000);
+                                                            if (!audio) audio = eff.audio;
+                                                        }
+                                                    }
+                                                };
+                                                
+                                                tryPlayTransform();
+                                                tryPlayEffect();
+                                                
+                                                // 播放音效
+                                                if (!audio) audio = effs.audio;
+                                                if (audio) {
+                                                    game.playAudio('..', skinSwitch.dcdPath, 'assets/dynamic', audio);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            };
 
                             lib.skill._check_die_yh = {
                                 trigger: {
@@ -2903,7 +3117,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         let ps = lib.config[dynamicSkinKey][name];
                         if (ps !== 'none') currentSelect = ps + '.jpg'
                     }
-                    // 没有包含千幻, 暂时不设置静皮, 静皮用小杀代替, 以后可能用系统默认皮肤代替, 或者系统默认的皮肤系统代替
+                    // 没有包含千幻, 暂时不设置静皮, 静皮用小杀代替, 以后可能用系统默认皮肤代替
                     keys.map(name => {
                         skinInfoMap[name] = {
                             staticImg: "url(" + skinSwitch.url + "/images/character/小杀.png)",
@@ -9259,6 +9473,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         xiandingji: '限定技',
                         zhuanhuanji: '转换技',
                         damage: '受伤次数',
+                        roundCount: '回合计数',
                     }
 
                     initOptions(triggerSelect, triggerConstant)
@@ -10880,7 +11095,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
  2. 十周年UI文件不再需要导入, 现在十周年UI版本随意, 已经测试了最新的showK版本的十周年Ui, 没有出现问题.
  3. 十周年样式下出框背景不再会被覆盖.
  4. 所有动皮的出框播放速度默认为1.2
- 5. 千幻聆音雷修版本的手杀大屏预览的播放出框动画做了优化, 默认显示的更加完美, 基本不用进行调整
+ 5. 千幻大屏预览下, 可以进行调整背景.
  */
 
 /** 1.04版本更新:

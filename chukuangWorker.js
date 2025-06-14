@@ -143,22 +143,6 @@ class PlayerAnimation {
         // playNode.angle = undefined
         let showTime = animation.showTime * 1000
         let delayTime = 400
-        
-        // 针对出场动画和特殊动画，确保有足够的播放时间
-        if (data.action === 'chuchang') {
-            // 出场动画至少播放2秒，确保动画完整播放
-            showTime = Math.max(showTime, 2000)
-            delayTime = 300 // 减少回框延迟
-        } else if (data.action === 'TeShu') {
-            // 特殊动画至少播放1.5秒，确保动画完整播放
-            showTime = Math.max(showTime, 1500)
-            delayTime = 300 // 减少回框延迟
-        } else if (data.action === 'hudong') {
-            // 互动动画至少播放1.5秒，确保动画完整播放
-            showTime = Math.max(showTime, 1500)
-            delayTime = 300 // 减少回框延迟
-        }
-        
         if (!(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
             if (showTime <= 800) {
                 delayTime = 200

@@ -857,6 +857,92 @@ special: {
 
 其他转换技,受伤次数等类似, 就不赘述了. 
 
+**回合计数变身参数示例**
+```js
+special: {
+    // 定义变身皮肤
+    变身1: {
+        name: 'caocao/战场绝版', // 不同骨骼, 格式为 '角色id/皮肤名称'
+        effect: 'shaohui', // 变身特效
+        audio: '曹操/audio/skill/victory', // 变身时播放的语音
+    },
+    变身2: {
+        name: 'caocao/魏武帝', // 不同骨骼
+        effect: 'shaohui',
+    },
+    // 定义播放的特效
+    play: {
+        name: "曹操/战场绝版/chuchang",
+        scale: 1,
+        x: [0,0.8],
+        y: [0,0.4],
+        audio: '曹操/audio/XingXiang', // 播放特效时的语音
+    },
+    // 触发条件设置
+    condition: {
+        // 回合计数触发
+        roundCount: {
+            rounds: 2, // 第2回合时触发变身
+            transform: "变身1", // 要变成的皮肤
+            play: 'play', // 播放的特效
+            audio: '曹操/audio/round', // 触发时的语音
+        }
+    }
+}
+```
+
+这个示例展示了在第2回合开始时，角色会变身为"caocao/战场绝版"皮肤。你可以根据需要设置不同的回合数：
+
+- 设置`rounds: 2`表示第2回合开始时触发变身
+- 设置`rounds: 3`表示第3回合开始时触发变身
+- 也可以设置多个变身效果，比如在回合2变一次，回合4再变一次，只需要定义多个皮肤和条件
+
+**多回合阶段变身示例**
+
+如果你希望一个角色在不同回合触发不同的变身效果，可以设置多个技能或使用不同的skin：
+
+```js
+// 第2回合触发第一次变身
+special: {
+    变身1: {
+        name: 'caocao/战场绝版',
+        effect: 'shaohui',
+    },
+    play1: {
+        name: "曹操/战场绝版/chuchang",
+        scale: 1,
+    },
+    condition: {
+        roundCount: {
+            rounds: 2,
+            transform: "变身1",
+            play: 'play1',
+        }
+    }
+}
+
+// 第4回合触发第二次变身
+special: {
+    变身2: {
+        name: 'caocao/魏武帝',
+        effect: 'juexing_caocao',
+    },
+    play2: {
+        name: "曹操/魏武帝/chuchang",
+        scale: 1.2,
+    },
+    condition: {
+        roundCount: {
+            rounds: 4,
+            transform: "变身2",
+            play: 'play2',
+        }
+    }
+}
+```
+
+如果你想要在一个角色配置中设置多个回合触发，可以在同一个武将的不同皮肤上分别设置。
+
 **变身特效参数**
 
 默认是十周年曹纯的2血变身特效, 可以指定其他变身特效, 变身特效存放在皮肤切换effects/transform目录下, 在变身参数中指定对应的变身特效.如下图所示. 皮肤切换预定义了几种默认的变身特效, 可以只需要指定特效名称即可. 分别是 
