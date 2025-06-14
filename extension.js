@@ -9933,9 +9933,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
                 let changeInfoData = () => {
                     if (!textInfoShow) return
-                    let x = adjustX[1].toFixed(2)
-                    let y = adjustY[1].toFixed(2)
-                    let scale = adjustScale.toFixed(2)
+                    let x = adjustX[1].toFixed(3)
+                    let y = adjustY[1].toFixed(3)
+                    let scale = adjustScale.toFixed(3)
                     let angle = Number(adjustAngle) || 0
                     textInfoShow.innerHTML = `x: [${adjustX[0]}, ${x}]<br> y: [${adjustY[0]}, ${y}]<br>大小: ${scale}<br> 角度: ${angle}`
                 }
@@ -9950,13 +9950,13 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     textInfoShow.innerHTML = `x: [0, 0.5]<br> y: [0, 0.5]<br>大小: 0.5<br> 角度: 0`
 
                     copyJudgeInfo.listen(() => {
-                        adjustX[1] = Number(adjustX[1].toFixed(2))
-                        adjustY[1] = Number(adjustY[1].toFixed(2))
+                        adjustX[1] = Number(adjustX[1].toFixed(3))
+                        adjustY[1] = Number(adjustY[1].toFixed(3))
                         copyToClipboard({
                             x: adjustX,
                             y: adjustY,
                             angle: adjustAngle,
-                            scale: Number(adjustScale.toFixed(2)),
+                            scale: Number(adjustScale.toFixed(3)),
                         })
                     })
 
@@ -10295,13 +10295,13 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     if (!adjustX || !adjustY) return
                     
                     // 保存当前模式的调整到临时存储
-                    adjustX[1] = Number(adjustX[1].toFixed(2))
-                    adjustY[1] = Number(adjustY[1].toFixed(2))
+                    adjustX[1] = Number(adjustX[1].toFixed(3))
+                    adjustY[1] = Number(adjustY[1].toFixed(3))
                     tempAdjustments[currentMode] = {
                         x: [...adjustX],
                         y: [...adjustY],
-                        scale: Number(adjustScale.toFixed(2)),
-                        angle: Number(adjustAngle.toFixed(2))
+                        scale: Number(adjustScale.toFixed(3)),
+                        angle: Number(adjustAngle.toFixed(3)),
                     }
                 }
 
@@ -10719,13 +10719,13 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         }
 
                         // 保存当前模式的位置数据
-                        adjustX[1] = Number(adjustX[1].toFixed(2))
-                        adjustY[1] = Number(adjustY[1].toFixed(2))
+                        adjustX[1] = Number(adjustX[1].toFixed(3))
+                        adjustY[1] = Number(adjustY[1].toFixed(3))
                         let modeData = {
                             x: adjustX,
                             y: adjustY,
-                            scale: Number(adjustScale.toFixed(2)),
-                            angle: Number(adjustAngle.toFixed(2))
+                            scale: Number(adjustScale.toFixed(3)),
+                            angle: Number(adjustAngle.toFixed(3))
                         }
 
                         let k = modeToKey[currentMode]
