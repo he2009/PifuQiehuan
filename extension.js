@@ -7301,7 +7301,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         left: 50%;
                         margin-left: -16px;
                         width: 32px;
-                        height: 120px;
+                        height: 160px;
                         background: rgba(21,21,21,.9);
                         border-radius: 2px;
                     }
