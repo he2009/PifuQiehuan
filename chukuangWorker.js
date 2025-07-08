@@ -203,7 +203,7 @@ class PlayerAnimation {
         if (data.action === 'chuchang') {
             // 出场动画直接使用调整后的大小，不进行额外的放大缩小
             // 保持当前设置的scale值不变
-            // 注释掉放大缩小逻辑，让角色按照调整的大小直接播放
+            // playNode.scaleTo(playNode.scale * 1.2, 500)
         }
         // 设置是否翻转
         if (!data.me) {
@@ -434,24 +434,6 @@ class PlayerAnimation {
             } else {
                 lastTime = lastTime - curTime
                 console.log('多指连续')
-            }
-        } else if (data.action === 'chuchang') {
-            // 出场动画需要播放更完整才重置
-            if (curTime / lastTime >= 0.8) {
-                entry.trackTime = 0
-                console.log('出场动画重置----', curTime/lastTime, curTime)
-            } else {
-                lastTime = lastTime - curTime
-                console.log('出场动画不重置------', curTime/lastTime, curTime)
-            }
-        } else if (data.action === 'TeShu') {
-            // 特殊动画需要播放更完整才重置
-            if (curTime / lastTime >= 0.7) {
-                entry.trackTime = 0
-                console.log('特殊动画重置----', curTime/lastTime, curTime)
-            } else {
-                lastTime = lastTime - curTime
-                console.log('特殊动画不重置------', curTime/lastTime, curTime)
             }
         } else {
             if (curTime / lastTime >= 0.1) {
@@ -1061,45 +1043,19 @@ function isChuKuang(data) {
     // 如果已经是出框状态, 直接返回, 不能在短时间内连续请求
     let playerState = playerAnimation.playerState[data.id]
     if (playerState) {
-        let currentTime = new Date().getTime()
-        
-        // 针对出场动画设置更长的冷却时间
         if (data.action === 'chuchang') {
-            // 出场动画的冷却时间设为2500ms，确保动画播放完整（2秒播放时间+0.5秒缓冲）
-            if (playerState.time && currentTime - playerState.time <= 2500) {
-                return
-            }
-            playerState['time'] = currentTime
-        }
-        // 针对特殊动画设置更长的冷却时间
-        else if (data.action === 'TeShu') {
-            // 特殊动画的冷却时间设为2000ms，确保动画播放完整（1.5秒播放时间+0.5秒缓冲）
-            if (playerState.time && currentTime - playerState.time <= 2000) {
-                return
-            }
-            playerState['time'] = currentTime
-        }
-        // 针对互动动画设置合适的冷却时间
-        else if (data.action === 'hudong') {
-            // 互动动画的冷却时间设为1800ms，确保动画播放完整（1.5秒播放时间+0.3秒缓冲）
-            if (playerState.time && currentTime - playerState.time <= 1800) {
-                return
-            }
-            playerState['time'] = currentTime
+            playerState['time'] = new Date().getTime()
         }
         else {
-            console.log(playerState, currentTime, currentTime - playerState.time < 40)
+            console.log(playerState, new Date().getTime(), new Date().getTime() - playerState.time < 40)
             if (playerState.action != null && playerState.action !== data.action) {
                 return
             }
-            if (playerState.lastAction === 'chuchang' && playerState.time && currentTime - playerState.time <= 2500) {
-                return
-            }
-            if (playerState.lastAction === 'TeShu' && playerState.time && currentTime - playerState.time <= 2000) {
+            if (playerState.lastAction === 'chuchang' && playerState.time && new Date().getTime() - playerState.time <= 200) {
                 return
             }
             // 延时100ms执行动作, 防止两次触发相近
-            if (playerState.time && currentTime - playerState.time < 40) {
+            if (playerState.time && new Date().getTime() - playerState.time < 40) {
                 // if (playerState.lastAction && playerState.lastAction !== data.action) {
                 //     setTimeout(() => {
                 //         isChuKuang(data)

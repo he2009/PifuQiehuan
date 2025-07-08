@@ -326,11 +326,6 @@ function startPlaySkin(data) {
 		let t = dynamic.playSpine(sprite)
 		t.opacity = 0
 		t.beijingNode = beijingNode
-		
-		// 添加对hideSlots的支持，用于处理脸部显示问题
-		if (sprite.player.hideSlots) {
-			t.hideSlots = sprite.player.hideSlots
-		}
 
 		let skins = t.skeleton.data.skins
 		if (sprite.player.skin && skins && skins.length > 0) {
@@ -361,17 +356,6 @@ function startPlaySkin(data) {
 					t.skeleton.setSlotsToSetupPose();
 				} catch (e) {
 					console.warn('Failed to set fallback skin:', e);
-				}
-			}
-		}
-
-		// 处理hideSlots，用于显示或隐藏特定的骨骼部件（如头部或脸部）
-		if (t.hideSlots && t.hideSlots.length > 0) {
-			for (let i = 0; i < t.skeleton.slots.length; i++) {
-				let slot = t.skeleton.slots[i];
-				if (t.hideSlots.includes(slot.data.name)) {
-					// 隐藏指定的部件
-					slot.color.a = 0;
 				}
 			}
 		}
@@ -423,11 +407,6 @@ function startPlaySkin(data) {
 		t.opacity = 0
 		t.qianjingNode = qianjingNode
 
-		// 添加对hideSlots的支持，用于处理脸部显示问题
-		if (sprite.player.hideSlots) {
-			t.hideSlots = sprite.player.hideSlots
-		}
-
 		let skins = t.skeleton.data.skins
 		if (sprite.player.skin && skins && skins.length > 0) {
 			let skinFound = false;
@@ -457,17 +436,6 @@ function startPlaySkin(data) {
 					t.skeleton.setSlotsToSetupPose();
 				} catch (e) {
 					console.warn('Failed to set fallback skin:', e);
-				}
-			}
-		}
-
-		// 处理hideSlots，用于显示或隐藏特定的骨骼部件（如头部或脸部）
-		if (t.hideSlots && t.hideSlots.length > 0) {
-			for (let i = 0; i < t.skeleton.slots.length; i++) {
-				let slot = t.skeleton.slots[i];
-				if (t.hideSlots.includes(slot.data.name)) {
-					// 隐藏指定的部件
-					slot.color.a = 0;
 				}
 			}
 		}
@@ -881,7 +849,7 @@ function action(data) {
 					} else {
 						apnode.skeleton.state.setAnimation(0, apnode.action || apnode.skeleton.defaultAction, true)
 					}
-				}, 30); // 减少延迟从150ms到30ms，实现更快的动画切换
+				}, 150);
 			}
 
 			let showTime = (animation.showTime || animation.duration) * 1000
@@ -918,7 +886,7 @@ function action(data) {
 			// 重新绑定开始渲染
 			actualPlayNode.opacity = 1
 			postMessage({ id: data.id, type: 'chukuangSecond', delayTime: playNode ? 130 : 100 })
-		}, 30) // 减少延迟从200ms到30ms，实现更快的动画播放
+		}, 200)
 	}
 
 	// 说明出框和待机动作不是同一个皮肤, 那么需要临时重新加载
@@ -1195,7 +1163,7 @@ function debug(data) {
 						actualPlayNode.opacity = 1
 						playAction(apnode, animation);
 					}
-				}, 30) // 减少调试模式延迟从200ms到30ms，实现更快的调试响应
+				}, 200)
 				// window.postMessage(true);
 				window.postMessage({ id: data.id, type: 'debugChuKuang' })
 			}
@@ -1758,11 +1726,6 @@ function changeSkelSkin(data) {
 	if (!apnode) return
 	let specifySkinName = data.skinName
 
-	// 添加hideSlots参数的支持
-	if (data.hideSlots && Array.isArray(data.hideSlots)) {
-		apnode.hideSlots = data.hideSlots;
-	}
-
 	let skins = apnode.skeleton.data.skins
 	if (specifySkinName) {
 		for (let i = 0; i < skins.length; i++) {
@@ -1770,17 +1733,6 @@ function changeSkelSkin(data) {
 				try {
 					apnode.skeleton.setSkinByName(specifySkinName);
 					apnode.skeleton.setSlotsToSetupPose();
-					
-					// 处理hideSlots，用于显示或隐藏特定的骨骼部件（如头部或脸部）
-					if (apnode.hideSlots && apnode.hideSlots.length > 0) {
-						for (let i = 0; i < apnode.skeleton.slots.length; i++) {
-							let slot = apnode.skeleton.slots[i];
-							if (apnode.hideSlots.includes(slot.data.name)) {
-								// 隐藏指定的部件
-								slot.color.a = 0;
-							}
-						}
-					}
 					return
 				} catch (e) {
 					console.warn('Failed to set skin:', specifySkinName, e);
@@ -1792,7 +1744,6 @@ function changeSkelSkin(data) {
 						} catch (e2) {
 							console.warn('Failed to set default skin:', e2);
 						}
-
 					}
 					return
 				}
@@ -1812,17 +1763,6 @@ function changeSkelSkin(data) {
 				try {
 					apnode.skeleton.setSkinByName(skins[j].name);
 					apnode.skeleton.setSlotsToSetupPose();
-					
-					// 处理hideSlots，用于显示或隐藏特定的骨骼部件（如头部或脸部）
-					if (apnode.hideSlots && apnode.hideSlots.length > 0) {
-						for (let i = 0; i < apnode.skeleton.slots.length; i++) {
-							let slot = apnode.skeleton.slots[i];
-							if (apnode.hideSlots.includes(slot.data.name)) {
-								// 隐藏指定的部件
-								slot.color.a = 0;
-							}
-						}
-					}
 					return
 				} catch (e) {
 					console.warn('Failed to set skin:', skins[j].name, e);
@@ -2266,47 +2206,35 @@ function getActionDuration(dynamic, skelName, actionName) {
 
 /*************** 每个函数处理worker消息 end ***************/
 
-/**
- * 处理 worker 接收到的消息，根据消息类型调用对应的处理函数
- * @param {MessageEvent} e - 接收到的消息事件
- */
-const MESSAGE_HANDLERS = {
-    CREATE: create,
-    PLAY: play,
-    StartPlay: startPlaySkin,
-    STOP: stop,
-    STOPALL: stopAll,
-    UPDATE: msgUpdate,
-    ACTION: action,
-    FIND: find,
-    SHOW: show,
-    ADJUST: adjust,
-    DEBUG: debug,
-    POSITION: position,
-    hideAllNode: hideAllNode,
-    recoverDaiJi: recoverDaiJi,
-    DESTROY: destroy,
-    changeSkelSkin: changeSkelSkin,
-    getBound: getBound,
-    changeQhlxFactor: changeQhlxFactor,
-    GET_NODE_INFO: getNodeInfo,
-    RESIZE: resize,
-    CHANGE_ACTION: changeAction,
-    LOAD_RESOURCES: loadResources
-};
+onmessage = function (e) {
+	let data = e.data
 
-onmessage = function(e) {
-    const { data } = e;
-    
-    if (!data || !data.message) {
-        console.warn('Received message with no message type', data);
-        return;
-    }
+	const messageMap = {
+		CREATE: create,
+		PLAY: play,
+		StartPlay: startPlaySkin,
+		STOP: stop,
+		STOPALL: stopAll,
+		UPDATE: msgUpdate,
+		ACTION: action,
+		FIND: find,
+		SHOW: show,
+		ADJUST: adjust,
+		DEBUG: debug,
+		POSITION: position,
+		hideAllNode: hideAllNode,
+		recoverDaiJi: recoverDaiJi,
+		DESTROY: destroy,
+		changeSkelSkin: changeSkelSkin,
+		getBound: getBound,
+		changeQhlxFactor: changeQhlxFactor,
+		GET_NODE_INFO: getNodeInfo,
+		RESIZE: resize,
+		CHANGE_ACTION: changeAction,
+		LOAD_RESOURCES: loadResources
+	}
+	if (data.message in messageMap) {
+		messageMap[data.message](data)
+	}
 
-    const handler = MESSAGE_HANDLERS[data.message];
-    if (handler) {
-        handler(data);
-    } else {
-        console.warn(`Unknown message type: ${data.message}`);
-    }
-};
+}

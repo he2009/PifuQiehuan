@@ -782,7 +782,6 @@ var newDuilib;
 		};
 		
 		AnimationPlayer.prototype.playSpine = function (sprite, position){
-			if (self.duicfg && !self.duicfg.gameAnimationEffect) return;
 			if (sprite == undefined) return console.error('playSpine: parameter undefined');
 			if (typeof sprite == 'string') sprite = { name: sprite };
 			if (!this.hasSpine(sprite.name)) return console.error('playSpine: [' + sprite.name + '] 骨骼没有加载');

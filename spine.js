@@ -2221,12 +2221,70 @@ var spine;
 	var AtlasAttachmentLoader = (function () {
 		function AtlasAttachmentLoader(atlas) {
 			this.atlas = atlas;
+			this.mappingCache = {}; // Cache for successful mappings
+			this.skeletonData = null; // Will be set when skeleton is loaded
 		}
 		AtlasAttachmentLoader.prototype.newRegionAttachment = function (skin, name, path) {
 			var region = this.atlas.findRegion(path);
+			
+			// If not found, try some common path variations
 			if (region == null) {
-				console.error("Region not found in atlas: " + path + " (region attachment: " + name + ")")
-				return
+				// Try with forward slashes replaced by backslashes
+				var pathVariant1 = path.replace(/\//g, "\\");
+				region = this.atlas.findRegion(pathVariant1);
+				
+				// Try with backslashes replaced by forward slashes
+				if (region == null) {
+					var pathVariant2 = path.replace(/\\/g, "/");
+					region = this.atlas.findRegion(pathVariant2);
+				}
+				
+				// Try without directory path (just filename)
+				if (region == null) {
+					var filename = path.split(/[\/\\]/).pop();
+					region = this.atlas.findRegion(filename);
+				}
+				
+				// Try URL encoding/decoding for unicode characters
+				if (region == null && typeof encodeURIComponent !== 'undefined') {
+					try {
+						var encodedPath = encodeURIComponent(path);
+						region = this.atlas.findRegion(encodedPath);
+						
+						if (region == null) {
+							var decodedPath = decodeURIComponent(path);
+							region = this.atlas.findRegion(decodedPath);
+						}
+					} catch (e) {
+						// Ignore encoding errors
+					}
+				}
+				
+				// Try intelligent name mapping for common naming mismatches
+				if (region == null) {
+					region = this.tryIntelligentMapping(path);
+				}
+			}
+			
+			if (region == null) {
+				// List available regions for debugging
+				var availableRegions = [];
+				for (var i = 0; i < this.atlas.regions.length && i < 20; i++) {
+					availableRegions.push(this.atlas.regions[i].name);
+				}
+				var regionList = availableRegions.length > 0 ? 
+					"\nAvailable regions: " + availableRegions.join(", ") + 
+					(this.atlas.regions.length > 20 ? " ... (and " + (this.atlas.regions.length - 20) + " more)" : "") :
+					"\nNo regions found in atlas";
+				
+				var versionInfo = this.skeletonData ? 
+					"\nSkeleton version: " + (this.skeletonData.version || "unknown") +
+					(this.skeletonData.isSpine42 ? " (Spine 4.2 detected)" : "") : "";
+				
+				console.error("🚫 Region not found in atlas: " + path + " (region attachment: " + name + ")" + regionList + versionInfo);
+				
+				// Return a placeholder or null instead of throwing
+				return null;
 				// throw new Error("Region not found in atlas: " + path + " (region attachment: " + name + ")");
 			}
 			region.renderObject = region;
@@ -2234,10 +2292,263 @@ var spine;
 			attachment.setRegion(region);
 			return attachment;
 		};
+		
+		// Intelligent mapping function for mismatched naming conventions
+		AtlasAttachmentLoader.prototype.tryIntelligentMapping = function (path) {
+			// Check cache first
+			if (this.mappingCache[path]) {
+				return this.atlas.findRegion(this.mappingCache[path]);
+			}
+			
+			var region = null;
+			
+			// Check if we're dealing with Spine 4.2 format
+			var isSpine42 = this.skeletonData && this.skeletonData.isSpine42;
+			
+			// Handle Spine 4.2 naming conventions specifically
+			if (isSpine42) {
+				region = this.trySpine42Mapping(path);
+				if (region) return region;
+			}
+			
+			// Extract number patterns from the requested path
+			var numberMatch = path.match(/(\d+)$/);
+			if (numberMatch) {
+				var requestedNumber = parseInt(numberMatch[1]);
+				
+				// Try different common naming patterns with the extracted number
+				var paddedNumber = ("0" + requestedNumber).slice(-2); // Pad with leading zero
+				var patterns = [
+					"BD/BD_" + paddedNumber,
+					"BD_KS/BD_KS_" + paddedNumber,
+					"BD_" + paddedNumber,
+					"SZ_" + paddedNumber,
+					paddedNumber
+				];
+				
+				// For Spine 4.2, prioritize certain patterns
+				if (isSpine42) {
+					patterns = [
+						"BD_KS/BD_KS_" + paddedNumber,
+						"BD/BD_" + paddedNumber,
+						"BD_" + paddedNumber,
+						paddedNumber,
+						"SZ_" + paddedNumber
+					];
+				}
+				
+				for (var i = 0; i < patterns.length; i++) {
+					region = this.atlas.findRegion(patterns[i]);
+					if (region) {
+						console.log("✅ " + (isSpine42 ? "Spine 4.2" : "General") + " mapped '" + path + "' to '" + patterns[i] + "'");
+						this.mappingCache[path] = patterns[i]; // Cache the successful mapping
+						return region;
+					}
+				}
+			}
+			
+			// Try fuzzy matching based on available regions
+			var bestMatch = this.findBestMatch(path);
+			if (bestMatch) {
+				console.log("🔍 Fuzzy matched '" + path + "' to '" + bestMatch.name + "'");
+				this.mappingCache[path] = bestMatch.name; // Cache the successful mapping
+				return bestMatch;
+			}
+			
+			return null;
+		};
+		
+		// Specific mapping for Spine 4.2 naming conventions
+		AtlasAttachmentLoader.prototype.trySpine42Mapping = function (path) {
+			var region = null;
+			
+			// Common Spine 4.2 path transformations
+			if (path.includes("sucai_入门_矮GCT")) {
+				// Extract the SZ number pattern
+				var szMatch = path.match(/SZ(\d+)\/SZ\1_(\d+)$/);
+				if (szMatch) {
+					var szGroup = szMatch[1];
+					var szNumber = szMatch[2];
+					var paddedNumber = ("0" + szNumber).slice(-2);
+					
+					// Try various BD patterns that might correspond
+					var mappingPatterns = [
+						"BD/BD_" + paddedNumber,
+						"BD_KS/BD_KS_" + paddedNumber,
+						"BD_KS_" + paddedNumber,
+						"BD_" + paddedNumber,
+						paddedNumber
+					];
+					
+					for (var i = 0; i < mappingPatterns.length; i++) {
+						region = this.atlas.findRegion(mappingPatterns[i]);
+											if (region) {
+						console.log("✅ Spine 4.2 mapped '" + path + "' to '" + mappingPatterns[i] + "'");
+						this.mappingCache[path] = mappingPatterns[i];
+						return region;
+					}
+					}
+				}
+			}
+			
+			// Handle other Spine 4.2 specific patterns
+			if (path.includes("/")) {
+				var pathParts = path.split("/");
+				var lastPart = pathParts[pathParts.length - 1];
+				
+				// Try to match by the last part of the path
+				var numberMatch = lastPart.match(/(\d+)$/);
+				if (numberMatch) {
+					var number = numberMatch[1];
+					var paddedNumber = ("0" + number).slice(-2);
+					
+					// Spine 4.2 often uses simplified naming in atlas
+					var spine42Patterns = [
+						"BD/BD_" + paddedNumber,
+						"BD_KS/BD_KS_" + paddedNumber,
+						"KS_" + paddedNumber,
+						"BD_" + paddedNumber,
+						lastPart.replace(/\d+$/, paddedNumber)
+					];
+					
+					for (var i = 0; i < spine42Patterns.length; i++) {
+						region = this.atlas.findRegion(spine42Patterns[i]);
+						if (region) {
+							console.log("✅ Spine 4.2 pattern matched '" + path + "' to '" + spine42Patterns[i] + "'");
+							this.mappingCache[path] = spine42Patterns[i];
+							return region;
+						}
+					}
+				}
+			}
+			
+			return null;
+		};
+		
+		// Find best match using simple string similarity
+		AtlasAttachmentLoader.prototype.findBestMatch = function (targetPath) {
+			var bestScore = 0;
+			var bestMatch = null;
+			
+			// Extract just the filename part for comparison
+			var targetFilename = targetPath.split(/[\/\\]/).pop().toLowerCase();
+			
+			for (var i = 0; i < this.atlas.regions.length; i++) {
+				var region = this.atlas.regions[i];
+				var regionFilename = region.name.split(/[\/\\]/).pop().toLowerCase();
+				
+				// Simple similarity score based on common characters
+				var score = this.calculateSimilarity(targetFilename, regionFilename);
+				
+				if (score > bestScore && score > 0.3) { // Minimum 30% similarity
+					bestScore = score;
+					bestMatch = region;
+				}
+			}
+			
+			return bestMatch;
+		};
+		
+		// Calculate simple string similarity
+		AtlasAttachmentLoader.prototype.calculateSimilarity = function (str1, str2) {
+			var longer = str1.length > str2.length ? str1 : str2;
+			var shorter = str1.length > str2.length ? str2 : str1;
+			
+			if (longer.length === 0) return 1.0;
+			
+			var editDistance = this.levenshteinDistance(longer, shorter);
+			return (longer.length - editDistance) / longer.length;
+		};
+		
+		// Calculate Levenshtein distance
+		AtlasAttachmentLoader.prototype.levenshteinDistance = function (str1, str2) {
+			var matrix = [];
+			
+			for (var i = 0; i <= str2.length; i++) {
+				matrix[i] = [i];
+			}
+			
+			for (var j = 0; j <= str1.length; j++) {
+				matrix[0][j] = j;
+			}
+			
+			for (i = 1; i <= str2.length; i++) {
+				for (j = 1; j <= str1.length; j++) {
+					if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+						matrix[i][j] = matrix[i - 1][j - 1];
+					} else {
+						matrix[i][j] = Math.min(
+							matrix[i - 1][j - 1] + 1,
+							matrix[i][j - 1] + 1,
+							matrix[i - 1][j] + 1
+						);
+					}
+				}
+			}
+			
+			return matrix[str2.length][str1.length];
+		};
 		AtlasAttachmentLoader.prototype.newMeshAttachment = function (skin, name, path) {
 			var region = this.atlas.findRegion(path);
-			if (region == null)
-				throw new Error("Region not found in atlas: " + path + " (mesh attachment: " + name + ")");
+			
+			// If not found, try some common path variations
+			if (region == null) {
+				// Try with forward slashes replaced by backslashes
+				var pathVariant1 = path.replace(/\//g, "\\");
+				region = this.atlas.findRegion(pathVariant1);
+				
+				// Try with backslashes replaced by forward slashes
+				if (region == null) {
+					var pathVariant2 = path.replace(/\\/g, "/");
+					region = this.atlas.findRegion(pathVariant2);
+				}
+				
+				// Try without directory path (just filename)
+				if (region == null) {
+					var filename = path.split(/[\/\\]/).pop();
+					region = this.atlas.findRegion(filename);
+				}
+				
+				// Try URL encoding/decoding for unicode characters
+				if (region == null && typeof encodeURIComponent !== 'undefined') {
+					try {
+						var encodedPath = encodeURIComponent(path);
+						region = this.atlas.findRegion(encodedPath);
+						
+						if (region == null) {
+							var decodedPath = decodeURIComponent(path);
+							region = this.atlas.findRegion(decodedPath);
+						}
+					} catch (e) {
+						// Ignore encoding errors
+					}
+				}
+				
+				// Try intelligent name mapping for common naming mismatches
+				if (region == null) {
+					region = this.tryIntelligentMapping(path);
+				}
+			}
+			
+			if (region == null) {
+				// List available regions for debugging
+				var availableRegions = [];
+				for (var i = 0; i < this.atlas.regions.length && i < 20; i++) {
+					availableRegions.push(this.atlas.regions[i].name);
+				}
+				var regionList = availableRegions.length > 0 ? 
+					"\nAvailable regions: " + availableRegions.join(", ") + 
+					(this.atlas.regions.length > 20 ? " ... (and " + (this.atlas.regions.length - 20) + " more)" : "") :
+					"\nNo regions found in atlas";
+				
+				var versionInfo = this.skeletonData ? 
+					"\nSkeleton version: " + (this.skeletonData.version || "unknown") +
+					(this.skeletonData.isSpine42 ? " (Spine 4.2 detected)" : "") : "";
+				
+				console.error("🚫 Region not found in atlas: " + path + " (mesh attachment: " + name + ")" + regionList + versionInfo);
+				return null;
+				// throw new Error("Region not found in atlas: " + path + " (mesh attachment: " + name + ")");
+			}
 			region.renderObject = region;
 			var attachment = new spine.MeshAttachment(name);
 			attachment.region = region;
@@ -4387,6 +4698,16 @@ var spine;
 			var input = new BinaryInput(binary);
 			skeletonData.hash = input.readString();
 			skeletonData.version = input.readString();
+			// Check if this is Spine 4.2 and set compatibility flag
+			if (skeletonData.version && skeletonData.version.indexOf("4.2") !== -1) {
+				skeletonData.isSpine42 = true;
+				console.log("Detected Spine 4.2 format - enabling compatibility mode");
+			}
+			
+			// Set skeleton data reference in attachment loader for intelligent mapping
+			if (this.attachmentLoader && this.attachmentLoader.skeletonData !== undefined) {
+				this.attachmentLoader.skeletonData = skeletonData;
+			}
 			skeletonData.width = input.readFloat();
 			skeletonData.height = input.readFloat();
 			var nonessential = input.readBoolean();
@@ -5354,6 +5675,16 @@ var spine;
 			if (skeletonMap != null) {
 				skeletonData.hash = skeletonMap.hash;
 				skeletonData.version = skeletonMap.spine;
+				// Check if this is Spine 4.2 and set compatibility flag
+				if (skeletonData.version && skeletonData.version.indexOf("4.2") !== -1) {
+					skeletonData.isSpine42 = true;
+					console.log("Detected Spine 4.2 format (JSON) - enabling compatibility mode");
+				}
+				
+				// Set skeleton data reference in attachment loader for intelligent mapping
+				if (this.attachmentLoader && this.attachmentLoader.skeletonData !== undefined) {
+					this.attachmentLoader.skeletonData = skeletonData;
+				}
 				skeletonData.width = skeletonMap.width;
 				skeletonData.height = skeletonMap.height;
 				skeletonData.fps = skeletonMap.fps;
@@ -10369,15 +10700,16 @@ var spine;
 							}
 							darkColor.a = premultipliedAlpha ? 1.0 : 0.0;
 						}
+						//混合
 						var slotBlendMode = slot.data.blendMode;
 						if (slotBlendMode != blendMode) {
 							blendMode = slotBlendMode;
 							batcher.setBlendMode(webgl.WebGLBlendModeConverter.getSourceGLBlendMode(blendMode, premultipliedAlpha), webgl.WebGLBlendModeConverter.getDestGLBlendMode(blendMode));
-						 if (premultipliedAlpha) {
-							batcher.setBlendMode(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-						} else {
-							batcher.setBlendMode(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-						}
+						//if (premultipliedAlpha) {
+							//batcher.setBlendMode(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						//} else {
+							//batcher.setBlendMode(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+				//		}
 						}
 						if (clipper.isClipping()) {
 							clipper.clipTriangles(renderable.vertices, renderable.numFloats, triangles, triangles.length, uvs, finalColor, darkColor, twoColorTint);

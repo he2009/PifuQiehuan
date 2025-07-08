@@ -712,6 +712,122 @@ class BaseAnimation {
         if (data.height != null) this.height = data.height;
     }
 
+    // 添加显示部件名称的方法
+    showPartsNames(filename) {
+        if (!this.hasSpine(filename)) return console.error('showPartsNames: [' + filename + '] 骨骼没有加载');
+        
+        let skeleton;
+        let skeletons = this.spine.skeletons;
+        for (let i = 0; i < skeletons.length; i++) {
+            skeleton = skeletons[i];
+            if (skeleton.name === filename) break;
+            skeleton = undefined;
+        }
+        
+        if (skeleton == undefined) skeleton = this.prepSpine(filename);
+        
+        // 切换显示部件名称的标志
+        this.showSlotNames = !this.showSlotNames;
+        
+        // 清除已有的文本元素
+        if (this.slotNameTexts) {
+            for (let i = 0; i < this.slotNameTexts.length; i++) {
+                if (this.slotNameTexts[i] && this.slotNameTexts[i].parentNode) {
+                    this.slotNameTexts[i].parentNode.removeChild(this.slotNameTexts[i]);
+                }
+            }
+        }
+        
+        this.slotNameTexts = [];
+        
+        // 如果开启了显示部件名称，则显示所有部件的名称
+        if (this.showSlotNames) {
+            let slots = skeleton.slots;
+            let canvas = this.canvas;
+            let container = canvas.parentNode || document.body;
+            
+            for (let i = 0; i < slots.length; i++) {
+                let slot = slots[i];
+                if (!slot.attachment) continue;
+                
+                let nameElement = document.createElement('div');
+                nameElement.style.position = 'absolute';
+                nameElement.style.color = 'white';
+                nameElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                nameElement.style.padding = '2px 5px';
+                nameElement.style.borderRadius = '3px';
+                nameElement.style.fontSize = '12px';
+                nameElement.style.zIndex = '9999';
+                nameElement.style.pointerEvents = 'none';
+                nameElement.textContent = slot.data.name;
+                nameElement.setAttribute('data-slot-index', i); // 添加索引，方便更新位置时识别
+                
+                container.appendChild(nameElement);
+                this.slotNameTexts.push(nameElement);
+            }
+            
+            // 添加更新部件名称位置的函数到渲染循环中
+            this._updateSlotNamePositions = true;
+        } else {
+            this._updateSlotNamePositions = false;
+        }
+        
+        return this.showSlotNames;
+    }
+    
+    // 辅助函数：更新部件名称的位置
+    updateSlotNamesPosition(skeleton) {
+        if (!this._updateSlotNamePositions || !this.slotNameTexts || this.slotNameTexts.length === 0) return;
+        
+        const canvas = this.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const slots = skeleton.slots;
+        const worldVertices = new Float32Array(8);
+        
+        for (let i = 0; i < this.slotNameTexts.length; i++) {
+            const nameElement = this.slotNameTexts[i];
+            const slotIndex = parseInt(nameElement.getAttribute('data-slot-index'));
+            if (isNaN(slotIndex) || slotIndex >= slots.length) continue;
+            
+            const slot = slots[slotIndex];
+            if (!slot || !slot.attachment) continue;
+            
+            // 根据附件类型计算位置
+            let x, y;
+            
+            if (slot.attachment.computeWorldVertices) {
+                try {
+                    slot.attachment.computeWorldVertices(slot, 0, slot.attachment.worldVerticesLength, worldVertices, 0, 2);
+                    // 计算中心点
+                    x = 0; y = 0;
+                    const vertexCount = slot.attachment.worldVerticesLength / 2;
+                    for (let v = 0; v < slot.attachment.worldVerticesLength; v += 2) {
+                        x += worldVertices[v];
+                        y += worldVertices[v + 1];
+                    }
+                    x /= vertexCount;
+                    y /= vertexCount;
+                } catch (e) {
+                    // 使用骨骼位置作为替代
+                    x = slot.bone.worldX;
+                    y = slot.bone.worldY;
+                }
+            } else {
+                // 使用骨骼位置作为替代
+                x = slot.bone.worldX;
+                y = slot.bone.worldY;
+            }
+            
+            // 转换为屏幕坐标
+            x = rect.left + (x * canvas.clientWidth / canvas.width);
+            y = rect.top + (rect.height - y * canvas.clientHeight / canvas.height);
+            
+            // 更新文本元素位置
+            nameElement.style.left = (x - nameElement.offsetWidth / 2) + 'px';
+            nameElement.style.top = (y - nameElement.offsetHeight - 5) + 'px';
+        }
+    }
+
 }
 
 class Animation3_6 extends BaseAnimation {
@@ -1095,6 +1211,17 @@ class Animation3_6 extends BaseAnimation {
             this.running = false;
             gl.renderAni = null
             return;
+        }
+        
+        // 如果开启了显示部件名称，则更新部件名称的位置
+        if (this._updateSlotNamePositions && this.slotNameTexts && this.slotNameTexts.length > 0) {
+            // 查找当前活动的骨骼
+            for (var i = 0; i < this.spine.skeletons.length; i++) {
+                if (!this.spine.skeletons[i].completed) {
+                    this.updateSlotNamesPosition(this.spine.skeletons[i]);
+                    break;
+                }
+            }
         }
 
         var sprite, state, skeleton;
@@ -2734,7 +2861,17 @@ class Animation3_8 extends BaseAnimation {
         // 标记骨骼加载状态为true
         skeleton.completed = true;
 
-        skeleton.setSkinByName('default');
+        try {
+            // 尝试设置默认皮肤，如果失败不会中断程序
+            skeleton.setSkinByName('default');
+        } catch (e) {
+            console.warn('设置默认皮肤失败，尝试备选方案:', e.message);
+            // 如果有可用皮肤，则使用第一个
+            if (skeleton.data.skins.length > 0) {
+                skeleton.setSkin(skeleton.data.skins[0]);
+                console.warn('使用第一个可用皮肤作为默认皮肤');
+            }
+        }
         skeleton.setToSetupPose();
         skeleton.updateWorldTransform();
         skeleton.state = new spine3_8.AnimationState(new spine.AnimationStateData(skeleton.data));

@@ -25,7 +25,19 @@ window.skinSwitchLoadParams = function(lib, game, ui, get, ai, _status){window.s
                 0.59
             ],
             "scale": 0.69,
-            "angle": 0
+            "angle": 0,
+            "zhishixian": {
+                "x": [
+                    0,
+                    0.824
+                ],
+                "y": [
+                    0,
+                    0.285
+                ],
+                "scale": 0.81,
+                "angle": 0
+            }
         }
     },
     "dc_zhaoxiang": {
@@ -324,6 +336,34 @@ window.skinSwitchLoadParams = function(lib, game, ui, get, ai, _status){window.s
             ],
             "scale": 0.34,
             "angle": 4
+        }
+    },
+    "zhongyao": {
+        "稳定关右": {
+            "x": [
+                0,
+                0.594
+            ],
+            "y": [
+                0,
+                0.36
+            ],
+            "scale": 0.41,
+            "angle": -10
+        }
+    },
+    "ol_xiaoqiao": {
+        "丽质天成": {
+            "x": [
+                0,
+                0.843
+            ],
+            "y": [
+                0,
+                0.263
+            ],
+            "scale": 0.55,
+            "angle": 0
         }
     }
 }
